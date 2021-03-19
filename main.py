@@ -3,7 +3,16 @@ import os
 import tensorflow as tf
 # from utils import *
 
-"""parsing and configuration"""
+
+def str2bool(x):
+    return x.lower() in ('true')
+
+
+def none_or_str(x):
+    if x == 'None':
+        return None
+    return x
+
 
 def parse_args():
     desc = "Tensorflow implementation of SPatchGAN."
@@ -16,7 +25,7 @@ def parse_args():
     parser.add_argument('--dataset', type=str, required=True, help='Name of the training dataset.')
     parser.add_argument('--test_dataset', type=str, default=None,
                         help='Name of the testing dataset. Same as the training dataset by default.')
-    parser.add_argument('--dataset_type', type=str, default='plain', help='Dataset type: [plain / tree].')
+    # parser.add_argument('--dataset_type', type=str, default='plain', help='Dataset type: [plain / tree].')
     parser.add_argument('--suffix', type=str, default=None, help='suffix for the model name.')
 
     # Training configs
@@ -37,8 +46,8 @@ def parse_args():
     # Input configs
     parser.add_argument('--img_size', type=int, default=256, help='The size of input images.')
     parser.add_argument('--img_ch', type=int, default=3, help='Number of channels of the input images.')
-    parser.add_argument('--augment_flag', type=str, default='pad_crop',
-                        help='Augmentation method: [pad_crop / resize_crop / disabled].')
+    parser.add_argument('--augment_flag', type=none_or_str, default='pad_crop',
+                        help='Augmentation method: [pad_crop / resize_crop / None].')
 
     # Discriminator configs
     parser.add_argument('--dis_type', type=str, default='spatch', help='D type: [spatch / patch].')
@@ -47,7 +56,7 @@ def parse_args():
     parser.add_argument('--n_downsample_init_dis', type=int, default=6,
                         help='Number of downsampling layers in the initial feature extraction block.')
     parser.add_argument('--n_scales_dis', type=int, default=4, help='Number of scales in D.')
-    parser.add_argument('--sn_type_dis', type=str, default='lean', help='Spectral norm type: [lean / full / disabled]')
+    parser.add_argument('--sn_dis', type=none_or_str, default='fast', help='Spectral norm type: [fast / full / None]')
     parser.add_argument('--n_adapt_dis', type=int, default=2, help='Number of layers in each adaptation block.')
     parser.add_argument('--n_mix_dis', type=int, default=2, help='Number of mixing layers in each MLP.')
     parser.add_argument('--pad_type_dis', type=str, default='zero', help='Padding type in D: [zero / reflect]')
@@ -60,18 +69,18 @@ def parse_args():
     parser.add_argument('--block_type_gen', type=str, default='v1', help='G residual block type: [v1].')
     parser.add_argument('--ch_gen', type=int, default=128, help='Base channel number of forward G.')
     parser.add_argument('--ch_gen_bw', type=int, default=512, help='Base channel number of backward G.')
-    parser.add_argument('--upsample_type_gen', type=str, default='nearest', help='Upsampling method: [nearest].')
+    parser.add_argument('--upsample_type_gen', type=str, default='nearest',
+                        help='Upsampling method: [nearest / bilinear].')
     parser.add_argument('--n_updownsample_gen', type=int, default=3,
                         help='Number of up/downsampling layers in forward G.')
     parser.add_argument('--n_updownsample_gen_bw', type=int, default=3,
                         help='Number of up/downsampling layers in backward G.')
     parser.add_argument('--n_res_gen', type=int, default=8, help='Number of residual blocks in forward G.')
     parser.add_argument('--n_res_gen_bw', type=int, default=8, help='Number of residual blocks in backward G.')
-    parser.add_argument('--n_enhanced_upsample_blocks_gen', type=int, default=1,
+    parser.add_argument('--n_enhanced_upsample_gen', type=int, default=1,
                         help='Number of enhanced upsampling blocks that include multiple mixing layers.')
     parser.add_argument('--n_mix_upsample_gen', type=int, default=2,
                         help='Number of mixing layers in an enhanced upsampling block.')
-    parser.add_argument('--init_kernel_size_gen', type=int, default=3, help='Init kernel size in G')
     parser.add_argument('--resize_factor_gen_bw', type=int, default=8,
                         help='The resizing factor of input images for backward G.')
 
@@ -91,12 +100,10 @@ def parse_args():
     return check_args(parser.parse_args())
 
 
-"""checking arguments"""
 def check_args(args):
     return args
 
 
-"""main"""
 def main():
     # parse arguments
     args = parse_args()
