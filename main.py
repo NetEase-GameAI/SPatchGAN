@@ -1,7 +1,8 @@
 import argparse
 import os
 import tensorflow as tf
-# from utils import *
+from utils import show_all_variables
+from spatchgan import SPatchGAN
 
 
 def str2bool(x):
@@ -59,9 +60,8 @@ def parse_args():
     parser.add_argument('--sn_dis', type=none_or_str, default='fast', help='Spectral norm type: [fast / full / None]')
     parser.add_argument('--n_adapt_dis', type=int, default=2, help='Number of layers in each adaptation block.')
     parser.add_argument('--n_mix_dis', type=int, default=2, help='Number of mixing layers in each MLP.')
-    parser.add_argument('--pad_type_dis', type=str, default='zero', help='Padding type in D: [zero / reflect]')
-    parser.add_argument('--gap_dis', type=str2bool, default=True, help='Use the gap output in D.')
-    parser.add_argument('--gmp_dis', type=str2bool, default=True, help='Use the gmp output in D.')
+    parser.add_argument('--mean_dis', type=str2bool, default=True, help='Use the gap output in D.')
+    parser.add_argument('--max_dis', type=str2bool, default=True, help='Use the gmp output in D.')
     parser.add_argument('--stddev_dis', type=str2bool, default=True, help='Use the stddev output in D.')
 
     # Generator configs
@@ -116,8 +116,7 @@ def main():
     with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)) as sess:
 
         if args.network == 'spatchgan':
-            from SPATCHGAN import SPATCHGAN
-            gan = SPATCHGAN(sess, args)
+            gan = SPatchGAN(sess, args)
         else:
             raise RuntimeError('Invalid network!')
 

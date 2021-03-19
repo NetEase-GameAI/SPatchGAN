@@ -33,12 +33,12 @@ class GeneratorBasicRes:
 
             for i in range(self._n_res):
                 with tf.variable_scope('res_{}'.format(i)):
-                    x = self.conv_block(x, block_type=self._block_type, channel=channel)
+                    x = self._conv_block(x, block_type=self._block_type, channel=channel)
 
             for i in range(self._n_updownsample):
                 with tf.variable_scope('up_{}'.format(i)):
                     # (32, 32, 512) -> (64, 64, 512) -> (128, 128, 256) -> (256, 256, 128)
-                    x = self.upsample(x, method=self._upsample_type)
+                    x = self._upsample(x, method=self._upsample_type)
                     channel = channel if i < self._n_enhanced_upsample else channel // 2
                     n_mix_upsample = self._n_mix_upsample if i < self._n_enhanced_upsample else 1
                     for j in range(n_mix_upsample):
@@ -61,7 +61,7 @@ class GeneratorBasicRes:
             return x
 
     @classmethod
-    def conv_block(cls, x, block_type, channel, scope='resblock_0'):
+    def _conv_block(cls, x, block_type, channel, scope='resblock_0'):
         if block_type == 'v1':
             x = resblock_v1(x, channel=channel, scope=scope)
         else:
@@ -69,7 +69,7 @@ class GeneratorBasicRes:
         return x
 
     @classmethod
-    def upsample(cls, x, method: str = 'nearest'):
+    def _upsample(cls, x, method: str = 'nearest'):
         if method == 'nearest':
             x = nearest_up(x)
         elif method == 'bilinear':
