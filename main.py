@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument('--dataset', type=str, required=True, help='Name of the training dataset.')
     parser.add_argument('--test_dataset', type=str, default=None,
                         help='Name of the testing dataset. Same as the training dataset by default.')
-    # parser.add_argument('--dataset_type', type=str, default='plain', help='Dataset type: [plain / tree].')
+    parser.add_argument('--dataset_struct', type=str, default='plain', help='Dataset type: [plain / tree].')
     parser.add_argument('--suffix', type=str, default=None, help='suffix for the model name.')
 
     # Training configs

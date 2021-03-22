@@ -3,7 +3,7 @@ import time
 import tensorflow as tf
 import numpy as np
 from tensorflow.contrib.data import prefetch_to_device, shuffle_and_repeat, map_and_batch
-from utils import get_img_paths, summary_by_keywords, batch_resize, save_images
+from utils import get_img_paths, summary_by_keywords, batch_resize, save_images, load_test_data
 from ops import l1_loss, adv_loss, regularization_loss
 from imagedata import ImageData
 from discriminator.discriminator_spatch import DiscriminatorSPatch
@@ -19,6 +19,7 @@ class SPatchGAN:
         self.phase = args.phase
         self.dataset_name = args.dataset
         self.test_dataset_name = args.test_dataset or args.dataset
+        self.dataset_struct = args.dataset_struct
         self.suffix = args.suffix
 
         # Training
@@ -41,12 +42,8 @@ class SPatchGAN:
         self.augment_flag = args.augment_flag
         trainA_dir = os.path.join(os.path.dirname(__file__), 'dataset', self.dataset_name, 'trainA')
         trainB_dir = os.path.join(os.path.dirname(__file__), 'dataset', self.dataset_name, 'trainB')
-        self.trainA_dataset = get_img_paths(trainA_dir)
-        self.trainB_dataset = get_img_paths(trainB_dir)
-        # Auto detect the 2nd level if there is no image at the 1st level.
-        if len(self.trainA_dataset) == 0 or len(self.trainB_dataset) == 0:
-            self.trainA_dataset = get_img_paths(trainA_dir, level=2)
-            self.trainB_dataset = get_img_paths(trainB_dir, level=2)
+        self.trainA_dataset = get_img_paths(trainA_dir, self.dataset_struct)
+        self.trainB_dataset = get_img_paths(trainB_dir, self.dataset_struct)
         self.dataset_num = max(len(self.trainA_dataset), len(self.trainB_dataset))
 
         # Discriminator
@@ -269,6 +266,46 @@ class SPatchGAN:
 
             # save model for final step
             self.save(self.checkpoint_dir, counter)
+
+    def test(self):
+        testA_dir = os.path.join(os.path.dirname(__file__), 'dataset', self.test_dataset_name, 'testA')
+        test_A_files = get_img_paths(testA_dir, self.dataset_struct)
+
+        if self.saver is None:
+            self.saver = tf.train.Saver()
+        could_load, checkpoint_counter = self.load(self.checkpoint_dir)
+        if could_load :
+            print(" [*] Load SUCCESS")
+        else :
+            print(" [!] Load failed...")
+            raise RuntimeError("Failed to load the checkpoint")
+
+        dataset_tag = '' if self.test_dataset_name == self.dataset_name else self.test_dataset_name + '_'
+        result_dir = os.path.join(self.result_dir, dataset_tag + str(checkpoint_counter))
+        os.makedirs(result_dir, exist_ok=True)
+
+        st = time.time()
+        for sample_file in test_A_files:  # A -> B
+            print('Processing source image: ' + sample_file)
+            input = load_test_data(sample_file, size=self.img_size)
+            fake_img = self.sess.run(self.test_fake_B, feed_dict={self.test_domain_A: input})
+
+            if self.dataset_struct == 'plain':
+                dst_dir = result_dir
+            elif self.dataset_struct == 'tree':
+                src_dir = os.path.dirname(sample_file)
+                dirname_level1 = os.path.basename(src_dir)
+                dirname_level2 = os.path.basename(os.path.dirname(src_dir))
+                dst_dir = os.path.join(result_dir, dirname_level2, dirname_level1)
+                os.makedirs(dst_dir, exist_ok=True)
+            else:
+                raise RuntimeError('Invalid dataset_type!')
+            image_path = os.path.join(dst_dir, os.path.basename(sample_file))
+            save_images(fake_img[[0],:], [1, 1], image_path)
+
+        time_cost = time.time() - st
+        time_cost_per_img_ms = round(time_cost * 1000 / len(test_A_files))
+        print('Time cost per image: {} ms'.format(time_cost_per_img_ms))
 
     def save(self, checkpoint_dir, step):
         os.makedirs(checkpoint_dir, exist_ok=True)

@@ -10,18 +10,26 @@ def show_all_variables():
     slim.model_analyzer.analyze_vars(model_vars, print_info=True)
 
 
-def get_img_paths(input_dir: str, level=1):
+def get_img_paths(input_dir: str, dataset_struct : str = 'plain'):
     exts = ['jpg', 'jpeg', 'png']
     imgs = []
     for ext in exts:
-        if level == 1:
+        if dataset_struct == 'plain':
             pattern = input_dir + '/*.{}'.format(ext)
-        elif level == 2:
+        elif dataset_struct == 'tree':
             pattern = input_dir + '/*/*.{}'.format(ext)
         else:
-            raise ValueError('Invalid level!')
+            raise ValueError('Invalid dataset_struct!')
         imgs.extend(glob(pattern))
     return imgs
+
+
+def get_img_paths_auto(input_dir: str):
+    # Auto detect the directory structure.
+    dataset = get_img_paths(input_dir)
+    if len(dataset) == 0:
+        dataset = get_img_paths(input_dir, dataset_struct='tree')
+    return dataset
 
 
 def summary_by_keywords(keywords, node_type='tensor'):
@@ -79,5 +87,15 @@ def merge(images, size):
         i = idx % size[1]
         j = idx // size[1]
         img[h*j:h*(j+1), w*i:w*(i+1), :] = image
+
+    return img
+
+
+def load_test_data(image_path, size=256):
+    img = cv2.imread(image_path, flags=cv2.IMREAD_COLOR)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.resize(img, dsize=(size, size))
+    img = np.expand_dims(img, axis=0)
+    img = img / 127.5 - 1
 
     return img
