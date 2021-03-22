@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import datetime
 import tensorflow as tf
 import numpy as np
 from tensorflow.contrib.data import prefetch_to_device, shuffle_and_repeat, map_and_batch
@@ -306,6 +307,30 @@ class SPatchGAN:
         time_cost = time.time() - st
         time_cost_per_img_ms = round(time_cost * 1000 / len(test_A_files))
         print('Time cost per image: {} ms'.format(time_cost_per_img_ms))
+
+    def freeze_graph(self):
+        self.saver = tf.train.Saver()
+        could_load, checkpoint_counter = self.load(self.checkpoint_dir)
+
+        if could_load:
+            print(" [*] Load SUCCESS")
+        else:
+            print(" [!] Load failed...")
+            raise RuntimeError("Failed to load the checkpoint")
+
+        output_dir = os.path.join(self.checkpoint_dir, 'pb')
+        os.makedirs(output_dir, exist_ok=True)
+        time_stamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+        output_file = os.path.join(output_dir, 'output_graph_' + time_stamp + '.pb')
+
+        frozen_graph_def = tf.graph_util.convert_variables_to_constants(
+            sess=self.sess,
+            input_graph_def=self.sess.graph_def,
+            output_node_names=['test_fake_B'])
+
+        # Save the frozen graph
+        with open(output_file, 'wb') as f:
+            f.write(frozen_graph_def.SerializeToString())
 
     def save(self, checkpoint_dir, step):
         os.makedirs(checkpoint_dir, exist_ok=True)
