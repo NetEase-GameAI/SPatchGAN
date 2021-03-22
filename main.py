@@ -53,7 +53,7 @@ def parse_args():
     parser.add_argument('--dis_type', type=str, default='spatch', help='D type: [spatch / patch].')
     parser.add_argument('--logits_type_dis', type=str, default='stats', help='D logits calculation method: [stats].')
     parser.add_argument('--ch_dis', type=int, default=256, help='Base channel number of D.')
-    parser.add_argument('--n_downsample_init_dis', type=int, default=6,
+    parser.add_argument('--n_downsample_init_dis', type=int, default=2,
                         help='Number of downsampling layers in the initial feature extraction block.')
     parser.add_argument('--n_scales_dis', type=int, default=4, help='Number of scales in D.')
     parser.add_argument('--sn_dis', type=none_or_str, default='fast', help='Spectral norm type: [fast / full / None]')
@@ -72,7 +72,7 @@ def parse_args():
                         help='Upsampling method: [nearest / bilinear].')
     parser.add_argument('--n_updownsample_gen', type=int, default=3,
                         help='Number of up/downsampling layers in forward G.')
-    parser.add_argument('--n_updownsample_gen_bw', type=int, default=3,
+    parser.add_argument('--n_updownsample_gen_bw', type=int, default=0,
                         help='Number of up/downsampling layers in backward G.')
     parser.add_argument('--n_res_gen', type=int, default=8, help='Number of residual blocks in forward G.')
     parser.add_argument('--n_res_gen_bw', type=int, default=8, help='Number of residual blocks in backward G.')

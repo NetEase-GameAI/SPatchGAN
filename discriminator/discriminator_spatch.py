@@ -6,7 +6,7 @@ class DiscriminatorSPatch:
     def __init__(self, ch, n_downsample_init, n_scales, n_adapt, n_mix,
                  logits_type: str, stats: list, sn):
         self._ch = ch
-        self.n_downsample_init = n_downsample_init
+        self._n_downsample_init = n_downsample_init
         self._n_scales = n_scales
         self._n_adapt = n_adapt
         self._n_mix = n_mix
@@ -19,7 +19,7 @@ class DiscriminatorSPatch:
             channel = self._ch
             logits_list = []
 
-            for i in range(self.n_downsample_init):
+            for i in range(self._n_downsample_init):
                 with tf.variable_scope('down_{}'.format(i)):
                     # (256, 256, 3) -> (128, 128, 256) -> (64, 64, 512)
                     x = conv(x, channel, kernel=4, stride=2, pad=1, sn=self.sn)
