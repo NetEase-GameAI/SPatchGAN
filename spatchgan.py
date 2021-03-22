@@ -234,7 +234,7 @@ class SPatchGAN:
                 # Update D
                 d_loss, summary_str, _ = self.sess.run([self.dis_loss_all, self.summary_dis, self.D_optim],
                                                        feed_dict=train_feed_dict)
-                if idx + 1 % self.summary_freq == 0:
+                if (idx+1) % self.summary_freq == 0:
                     self.writer.add_summary(summary_str, counter)
 
                 # Update G
@@ -244,7 +244,7 @@ class SPatchGAN:
                                    self.gen_loss_all, self.summary_gen, self.G_optim],
                                   feed_dict=train_feed_dict)
 
-                if idx+1 % self.summary_freq == 0:
+                if (idx+1) % self.summary_freq == 0:
                     self.writer.add_summary(summary_str, counter)
 
                 # display training status
@@ -252,13 +252,13 @@ class SPatchGAN:
                 print("Step: [%2d] [%5d/%5d] time: %4.4f D_loss: %.8f, G_loss: %.8f"
                       % (step, idx, self.n_iters_per_step, time.time() - start_time, d_loss, g_loss))
 
-                if idx+1 % self.img_save_freq == 0:
+                if (idx+1) % self.img_save_freq == 0:
                     ABA_lr_resize = batch_resize(ABA_lr)
                     merged = np.vstack([batch_A_images, fake_B, ABA_lr_resize, batch_B_images, identity_B])
                     save_images(merged, [5, self.batch_size],
                                 os.path.join(self.sample_dir, 'sample_{:03d}_{:05d}.jpg'.format(step, idx + 1)))
 
-                if idx+1 % self.ckpt_save_freq == 0:
+                if (idx+1) % self.ckpt_save_freq == 0:
                     self.save(self.checkpoint_dir, counter)
 
             # After an epoch, start_batch_id is set to zero
