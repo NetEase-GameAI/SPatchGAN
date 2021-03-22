@@ -2,7 +2,8 @@
 
 ### Environment
 - CUDA 10.0
-- requirements.txt
+- Python 3.6
+- ``pip install -r requirements.txt``
 
 ### Dataset
 - dataset

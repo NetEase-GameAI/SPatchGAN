@@ -47,11 +47,11 @@ def parse_args():
 
     # Input configs
     parser.add_argument('--img_size', type=int, default=256, help='The size of input images.')
-    parser.add_argument('--augment_flag', type=none_or_str, default='pad_crop',
+    parser.add_argument('--augment_type', type=none_or_str, default='pad_crop',
                         help='Augmentation method: [pad_crop / resize_crop / None].')
 
     # Discriminator configs
-    parser.add_argument('--dis_type', type=str, default='spatch', help='D type: [spatch / patch].')
+    parser.add_argument('--dis_type', type=str, default='spatch', help='D type: [spatch].')
     parser.add_argument('--logits_type_dis', type=str, default='stats', help='D logits calculation method: [stats].')
     parser.add_argument('--ch_dis', type=int, default=256, help='Base channel number of D.')
     parser.add_argument('--n_downsample_init_dis', type=int, default=2,

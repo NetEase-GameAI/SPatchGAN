@@ -40,7 +40,7 @@ class SPatchGAN:
 
         # Input
         self.img_size = args.img_size
-        self.augment_flag = args.augment_flag
+        self.augment_type = args.augment_type
         trainA_dir = os.path.join(os.path.dirname(__file__), 'dataset', self.dataset_name, 'trainA')
         trainB_dir = os.path.join(os.path.dirname(__file__), 'dataset', self.dataset_name, 'trainB')
         self.trainA_dataset = get_img_paths(trainA_dir, self.dataset_struct)
@@ -104,7 +104,7 @@ class SPatchGAN:
 
     def fetch_data(self, dataset):
         gpu_device = '/gpu:0'
-        Image_Data_Class = ImageData(self.img_size, self.augment_flag)
+        Image_Data_Class = ImageData(self.img_size, self.augment_type)
         train_dataset = tf.data.Dataset.from_tensor_slices(dataset)
         train_dataset = train_dataset.apply(shuffle_and_repeat(self.dataset_num)) \
             .apply(map_and_batch(Image_Data_Class.image_processing, self.batch_size,
@@ -157,13 +157,13 @@ class SPatchGAN:
         self.reg_loss_dis = self.reg_weight * regularization_loss('dis_')
 
         # Overall loss
-        self.gen_loss_all = self.adv_loss_gen_ab + \
-                            self.id_loss_bb + \
-                            self.cyc_loss_aba + \
-                            self.reg_loss_gen
+        self.gen_loss_all = self.adv_loss_gen_ab \
+                            + self.id_loss_bb \
+                            + self.cyc_loss_aba \
+                            + self.reg_loss_gen
 
-        self.dis_loss_all = self.adv_loss_dis_b + \
-                            self.reg_loss_dis
+        self.dis_loss_all = self.adv_loss_dis_b \
+                            + self.reg_loss_dis
 
 
         """ Training """
@@ -185,6 +185,8 @@ class SPatchGAN:
         summary_list_gen = []
         summary_list_gen.append(tf.summary.scalar("gen_loss_all", self.gen_loss_all))
         summary_list_gen.append(tf.summary.scalar("adv_loss_gen_ab", self.adv_loss_gen_ab))
+        summary_list_gen.append(tf.summary.scalar("id_loss_bb", self.id_loss_bb))
+        summary_list_gen.append(tf.summary.scalar("cyc_loss_aba", self.cyc_loss_aba))
         summary_list_gen.append(tf.summary.scalar("reg_loss_gen", self.reg_loss_gen))
         summary_list_gen.extend(summary_scale_res)
         summary_list_gen.extend(summary_logits_gen)
@@ -253,7 +255,7 @@ class SPatchGAN:
                       % (step, idx, self.n_iters_per_step, time.time() - start_time, d_loss, g_loss))
 
                 if (idx+1) % self.img_save_freq == 0:
-                    ABA_lr_resize = batch_resize(ABA_lr)
+                    ABA_lr_resize = batch_resize(ABA_lr, self.img_size)
                     merged = np.vstack([batch_A_images, fake_B, ABA_lr_resize, batch_B_images, identity_B])
                     save_images(merged, [5, self.batch_size],
                                 os.path.join(self.sample_dir, 'sample_{:03d}_{:05d}.jpg'.format(step, idx + 1)))

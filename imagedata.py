@@ -2,22 +2,22 @@ import tensorflow as tf
 
 
 class ImageData:
-    def __init__(self, load_size, augment_flag):
+    def __init__(self, load_size, augment_type):
         self._load_size = load_size
-        self._augment_flag = augment_flag
+        self._augment_type = augment_type
 
     def image_processing(self, filename):
         x = tf.read_file(filename)
         x_decode = tf.image.decode_jpeg(x, channels=3)
 
-        if self._augment_flag is None:
+        if self._augment_type is None:
             img = tf.image.resize_images(x_decode, [self._load_size, self._load_size])
-        elif self._augment_flag == 'pad_crop':
+        elif self._augment_type == 'pad_crop':
             img = _augmentation_pad_crop(x_decode, self._load_size)
-        elif self._augment_flag == 'resize_crop':
+        elif self._augment_type == 'resize_crop':
             img = _augmentation_resize_crop(x_decode, self._load_size)
         else:
-            raise ValueError('Invalid augment_flag!')
+            raise ValueError('Invalid augment_type!')
 
         img = tf.cast(img, tf.float32) / 127.5 - 1
         return img
