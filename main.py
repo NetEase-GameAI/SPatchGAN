@@ -87,7 +87,7 @@ def parse_args():
     parser.add_argument('--output_dir', type=str,
                         default=os.path.join(os.path.dirname(__file__), 'output'),
                         help='Directory name to save all output')
-    parser.add_argument('--checkpoint_dir', type=str, default='checkpoint.',
+    parser.add_argument('--checkpoint_dir', type=str, default='checkpoint',
                         help='Directory to save the checkpoints')
     parser.add_argument('--result_dir', type=str, default='gen',
                         help='Directory to save the generated images.')
@@ -130,7 +130,7 @@ def main():
             gan.test()
             print(" [*] Test finished!")
         elif args.phase == 'freeze_graph':
-            gan.build_model_freeze()
+            gan.build_model_test()
             show_all_variables()
             gan.freeze_graph()
             print(" [*] Graph frozen!")

@@ -57,13 +57,13 @@ class SPatchGAN:
             if args.mean_dis:
                 stats.append('stddev')
             self.dis = DiscriminatorSPatch(ch=args.ch_dis,
-                                           n_downsample_init=args.n_downsample_init,
-                                           n_scales=args.n_scales,
-                                           n_adapt=args.n_adapt,
-                                           n_mix=args.n_mix,
+                                           n_downsample_init=args.n_downsample_init_dis,
+                                           n_scales=args.n_scales_dis,
+                                           n_adapt=args.n_adapt_dis,
+                                           n_mix=args.n_mix_dis,
                                            logits_type=args.logits_type_dis,
-                                           stats=args.stats,
-                                           sn=args.sn)
+                                           stats=stats,
+                                           sn=args.sn_dis)
         else:
             raise ValueError('Invalid dis_type!')
 
