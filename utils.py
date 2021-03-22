@@ -1,5 +1,7 @@
-from glob import glob
+import cv2
 import tensorflow as tf
+import numpy as np
+from glob import glob
 from tensorflow.contrib import slim
 
 
@@ -46,3 +48,36 @@ def summary_by_keywords(keywords, node_type='tensor'):
         summary_list.append(tf.summary.scalar(node.name + "_stddev", node_stddev))
 
     return summary_list
+
+
+def batch_resize(x, img_size):
+    x_up = np.zeros((x.shape[0], img_size, img_size, 3))
+    for i in range(x.shape[0]):
+        x_up[i, :, :, :] = cv2.resize(x[i, :, :, :], dsize=(img_size, img_size))
+    return x_up
+
+
+def save_images(images, size, image_path):
+    return imsave(inverse_transform(images), size, image_path)
+
+
+def inverse_transform(images):
+    return ((images+1.) / 2) * 255.0
+
+
+def imsave(images, size, path):
+    images = merge(images, size)
+    images = cv2.cvtColor(images.astype('uint8'), cv2.COLOR_RGB2BGR)
+
+    return cv2.imwrite(path, images)
+
+
+def merge(images, size):
+    h, w = images.shape[1], images.shape[2]
+    img = np.zeros((h * size[0], w * size[1], 3))
+    for idx, image in enumerate(images):
+        i = idx % size[1]
+        j = idx // size[1]
+        img[h*j:h*(j+1), w*i:w*(i+1), :] = image
+
+    return img

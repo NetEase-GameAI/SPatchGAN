@@ -1,7 +1,9 @@
 import os
+import time
 import tensorflow as tf
+import numpy as np
 from tensorflow.contrib.data import prefetch_to_device, shuffle_and_repeat, map_and_batch
-from utils import get_img_paths, summary_by_keywords
+from utils import get_img_paths, summary_by_keywords, batch_resize, save_images
 from ops import l1_loss, adv_loss, regularization_loss
 from imagedata import ImageData
 from discriminator.discriminator_spatch import DiscriminatorSPatch
@@ -128,10 +130,12 @@ class SPatchGAN:
             self.a_lr = tf.image.resize_images(self.domain_A, [self.resolution_bw, self.resolution_bw])
             self.ab_lr = tf.image.resize_images(self.x_ab, [self.resolution_bw, self.resolution_bw])
             self.aba_lr = self.gen_bw.translate(self.ab_lr, scope='gen_b2a')
+        else:
+            self.aba_lr = tf.zeros([self.batch_size, self.resolution_bw, self.resolution_bw, 3])
 
-        # Identity mapping
+            # Identity mapping
         self.x_bb = self.gen.translate(self.domain_B, reuse=True, scope='gen_a2b') \
-            if self.id_weight > 0.0 else None
+            if self.id_weight > 0.0 else tf.zeros_like(self.domain_B)
 
         # Discriminator
         b_logits = self.dis.discriminate(self.domain_B, scope='dis_b')
@@ -147,7 +151,7 @@ class SPatchGAN:
         # Identity loss
         self.id_loss_bb = self.id_weight * l1_loss(self.domain_B, self.x_bb) \
             if self.id_weight > 0.0 else 0.0
-        self.cyc_loss_aba = self.cyc_weight * self.l1_loss(self.a_lr, self.aba_lr) \
+        self.cyc_loss_aba = self.cyc_weight * l1_loss(self.a_lr, self.aba_lr) \
             if self.cyc_weight > 0.0 else 0.0
 
         # Weight decay
@@ -194,3 +198,91 @@ class SPatchGAN:
         summary_list_dis.append(tf.summary.scalar("reg_loss_dis", self.reg_loss_dis))
         summary_list_dis.extend(summary_logits_dis)
         self.summary_dis = tf.summary.merge(summary_list_dis)
+
+    def build_model_test(self):
+        self.test_domain_A = tf.placeholder(tf.float32, [1, self.img_size, self.img_size, 3],
+                                            name='test_domain_A')
+        test_fake_B = self.gen.translate(self.test_domain_A, scope='gen_a2b')
+        self.test_fake_B = tf.identity(test_fake_B, 'test_fake_B')
+
+    def train(self):
+        tf.global_variables_initializer().run()
+        self.saver = tf.train.Saver()
+        self.writer = tf.summary.FileWriter(self.log_dir, self.sess.graph)
+
+        # restore check-point if it exits
+        could_load, checkpoint_counter = self.load(self.checkpoint_dir)
+        if could_load:
+            start_step = checkpoint_counter // self.n_steps
+            start_batch_id = checkpoint_counter - start_step * self.n_iters_per_step
+            counter = checkpoint_counter
+            print(" [*] Load SUCCESS")
+        else:
+            start_step = 0
+            start_batch_id = 0
+            counter = 1
+            print(" [!] Load failed...")
+
+        # Looping over steps
+        start_time = time.time()
+        for step in range(start_step, self.n_steps):
+            lr = self.init_lr if step < self.decay_step else \
+                self.init_lr * (self.n_steps - step) / (self.n_steps - self.decay_step)
+            for idx in range(start_batch_id, self.n_iters_per_step):
+                train_feed_dict = {
+                    self.lr: lr
+                }
+
+                # Update D
+                d_loss, summary_str, _ = self.sess.run([self.dis_loss_all, self.summary_dis, self.D_optim],
+                                                       feed_dict=train_feed_dict)
+                if idx + 1 % self.summary_freq == 0:
+                    self.writer.add_summary(summary_str, counter)
+
+                # Update G
+                batch_A_images, batch_B_images, fake_B, identity_B, ABA_lr, g_loss, summary_str, _ = \
+                    self.sess.run([self.domain_A, self.domain_B,
+                                   self.x_ab, self.x_bb, self.aba_lr,
+                                   self.gen_loss_all, self.summary_gen, self.G_optim],
+                                  feed_dict=train_feed_dict)
+
+                if idx+1 % self.summary_freq == 0:
+                    self.writer.add_summary(summary_str, counter)
+
+                # display training status
+                counter += 1
+                print("Step: [%2d] [%5d/%5d] time: %4.4f D_loss: %.8f, G_loss: %.8f"
+                      % (step, idx, self.n_iters_per_step, time.time() - start_time, d_loss, g_loss))
+
+                if idx+1 % self.img_save_freq == 0:
+                    ABA_lr_resize = batch_resize(ABA_lr)
+                    merged = np.vstack([batch_A_images, fake_B, ABA_lr_resize, batch_B_images, identity_B])
+                    save_images(merged, [5, self.batch_size],
+                                os.path.join(self.sample_dir, 'sample_{:03d}_{:05d}.jpg'.format(step, idx + 1)))
+
+                if idx+1 % self.ckpt_save_freq == 0:
+                    self.save(self.checkpoint_dir, counter)
+
+            # After an epoch, start_batch_id is set to zero
+            # non-zero value is only for the first epoch after loading pre-trained model
+            start_batch_id = 0
+
+            # save model for final step
+            self.save(self.checkpoint_dir, counter)
+
+    def save(self, checkpoint_dir, step):
+        os.makedirs(checkpoint_dir, exist_ok=True)
+        self.saver.save(self.sess, os.path.join(checkpoint_dir, self.model_name + '.model'), global_step=step)
+
+    def load(self, checkpoint_dir):
+        print(" [*] Reading checkpoints...")
+        ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
+        if ckpt and ckpt.model_checkpoint_path:
+            ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
+            self.saver.restore(self.sess, os.path.join(checkpoint_dir, ckpt_name))
+            counter = int(ckpt_name.split('-')[-1])
+            print(" [*] Success to read {}".format(ckpt_name))
+            return True, counter
+        else:
+            print(" [*] Failed to find a checkpoint")
+            return False, 0
