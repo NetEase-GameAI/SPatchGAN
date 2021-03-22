@@ -100,79 +100,79 @@ class SPatchGAN:
         print('Number of trainA/B images: {}/{}'.format(len(self._trainA_dataset), len(self._trainB_dataset)) )
         print()
 
-    def fetch_data(self, dataset):
+    def _fetch_data(self, dataset):
         gpu_device = '/gpu:0'
-        Image_Data_Class = ImageData(self._img_size, self._augment_type)
+        imgdata = ImageData(self._img_size, self._augment_type)
         train_dataset = tf.data.Dataset.from_tensor_slices(dataset)
         train_dataset = train_dataset.apply(shuffle_and_repeat(self._dataset_num)) \
-            .apply(map_and_batch(Image_Data_Class.image_processing, self._batch_size,
+            .apply(map_and_batch(imgdata.image_processing, self._batch_size,
                                  num_parallel_batches=16, drop_remainder=True)) \
             .apply(prefetch_to_device(gpu_device, None))
         train_iterator = train_dataset.make_one_shot_iterator()
         return train_iterator.get_next()
 
     def build_model_train(self):
-        self.lr = tf.placeholder(tf.float32, name='learning_rate')
+        self._lr = tf.placeholder(tf.float32, name='learning_rate')
 
         # Input images
-        self.domain_A = self.fetch_data(self._trainA_dataset)
-        self.domain_B = self.fetch_data(self._trainB_dataset)
+        self._domain_a = self._fetch_data(self._trainA_dataset)
+        self._domain_b = self._fetch_data(self._trainB_dataset)
 
         # Forward generation
-        self.x_ab = self._gen.translate(self.domain_A, scope='gen_a2b')
+        self._x_ab = self._gen.translate(self._domain_a, scope='gen_a2b')
 
         # Backward generation
         if self._cyc_weight > 0.0:
-            self.a_lowres = tf.image.resize_images(self.domain_A, [self._resolution_bw, self._resolution_bw])
-            self.ab_lowres = tf.image.resize_images(self.x_ab, [self._resolution_bw, self._resolution_bw])
-            self.aba_lowres = self._gen_bw.translate(self.ab_lowres, scope='gen_b2a')
+            self._a_lowres = tf.image.resize_images(self._domain_a, [self._resolution_bw, self._resolution_bw])
+            self._ab_lowres = tf.image.resize_images(self._x_ab, [self._resolution_bw, self._resolution_bw])
+            self._aba_lowres = self._gen_bw.translate(self._ab_lowres, scope='gen_b2a')
         else:
-            self.aba_lowres = tf.zeros([self._batch_size, self._resolution_bw, self._resolution_bw, 3])
+            self._aba_lowres = tf.zeros([self._batch_size, self._resolution_bw, self._resolution_bw, 3])
 
             # Identity mapping
-        self.x_bb = self._gen.translate(self.domain_B, reuse=True, scope='gen_a2b') \
-            if self._id_weight > 0.0 else tf.zeros_like(self.domain_B)
+        self._x_bb = self._gen.translate(self._domain_b, reuse=True, scope='gen_a2b') \
+            if self._id_weight > 0.0 else tf.zeros_like(self._domain_b)
 
         # Discriminator
-        b_logits = self._dis.discriminate(self.domain_B, scope='dis_b')
-        ab_logits = self._dis.discriminate(self.x_ab, reuse=True, scope='dis_b')
+        b_logits = self._dis.discriminate(self._domain_b, scope='dis_b')
+        ab_logits = self._dis.discriminate(self._x_ab, reuse=True, scope='dis_b')
 
         # Adversarial loss for G
-        self.adv_loss_gen_ab = self._adv_weight * adv_loss(ab_logits, self._gan_type, target='real')
+        adv_loss_gen_ab = self._adv_weight * adv_loss(ab_logits, self._gan_type, target='real')
 
         # Adversarial loss for D
-        self.adv_loss_dis_b = self._adv_weight * adv_loss(b_logits, self._gan_type, target='real')
-        self.adv_loss_dis_b += self._adv_weight * adv_loss(ab_logits, self._gan_type, target='fake')
+        adv_loss_dis_b = self._adv_weight * adv_loss(b_logits, self._gan_type, target='real')
+        adv_loss_dis_b += self._adv_weight * adv_loss(ab_logits, self._gan_type, target='fake')
 
         # Identity loss
-        self.id_loss_bb = self._id_weight * l1_loss(self.domain_B, self.x_bb) \
+        id_loss_bb = self._id_weight * l1_loss(self._domain_b, self._x_bb) \
             if self._id_weight > 0.0 else 0.0
-        self.cyc_loss_aba = self._cyc_weight * l1_loss(self.a_lowres, self.aba_lowres) \
+        cyc_loss_aba = self._cyc_weight * l1_loss(self._a_lowres, self._aba_lowres) \
             if self._cyc_weight > 0.0 else 0.0
 
         # Weight decay
-        self.reg_loss_gen = self._reg_weight * regularization_loss('gen_')
-        self.reg_loss_dis = self._reg_weight * regularization_loss('dis_')
+        reg_loss_gen = self._reg_weight * regularization_loss('gen_')
+        reg_loss_dis = self._reg_weight * regularization_loss('dis_')
 
         # Overall loss
-        self.gen_loss_all = self.adv_loss_gen_ab \
-                            + self.id_loss_bb \
-                            + self.cyc_loss_aba \
-                            + self.reg_loss_gen
+        self._gen_loss_all = adv_loss_gen_ab \
+                             + id_loss_bb \
+                             + cyc_loss_aba \
+                             + reg_loss_gen
 
-        self.dis_loss_all = self.adv_loss_dis_b \
-                            + self.reg_loss_dis
+        self._dis_loss_all = adv_loss_dis_b \
+                             + reg_loss_dis
 
 
         """ Training """
         t_vars = tf.trainable_variables()
-        G_vars = [var for var in t_vars if 'gen_' in var.name]
-        D_vars = [var for var in t_vars if 'dis_' in var.name]
+        vars_gen = [var for var in t_vars if 'gen_' in var.name]
+        vars_dis = [var for var in t_vars if 'dis_' in var.name]
 
-        self.G_optim = tf.train.AdamOptimizer(self.lr, beta1=0.5, beta2=0.999)\
-            .minimize(self.gen_loss_all, var_list=G_vars)
-        self.D_optim = tf.train.AdamOptimizer(self.lr, beta1=0.5, beta2=0.999)\
-            .minimize(self.dis_loss_all, var_list=D_vars)
+        self._optim_gen = tf.train.AdamOptimizer(self._lr, beta1=0.5, beta2=0.999)\
+            .minimize(self._gen_loss_all, var_list=vars_gen)
+        self._optim_dis = tf.train.AdamOptimizer(self._lr, beta1=0.5, beta2=0.999)\
+            .minimize(self._dis_loss_all, var_list=vars_dis)
 
         """" Summary """
         # Record the IN scaling factor for each residual block.
@@ -181,35 +181,35 @@ class SPatchGAN:
         summary_logits_dis = summary_by_keywords(['D_logits_'], node_type='tensor')
 
         summary_list_gen = []
-        summary_list_gen.append(tf.summary.scalar("gen_loss_all", self.gen_loss_all))
-        summary_list_gen.append(tf.summary.scalar("adv_loss_gen_ab", self.adv_loss_gen_ab))
-        summary_list_gen.append(tf.summary.scalar("id_loss_bb", self.id_loss_bb))
-        summary_list_gen.append(tf.summary.scalar("cyc_loss_aba", self.cyc_loss_aba))
-        summary_list_gen.append(tf.summary.scalar("reg_loss_gen", self.reg_loss_gen))
+        summary_list_gen.append(tf.summary.scalar("gen_loss_all", self._gen_loss_all))
+        summary_list_gen.append(tf.summary.scalar("adv_loss_gen_ab", adv_loss_gen_ab))
+        summary_list_gen.append(tf.summary.scalar("id_loss_bb", id_loss_bb))
+        summary_list_gen.append(tf.summary.scalar("cyc_loss_aba", cyc_loss_aba))
+        summary_list_gen.append(tf.summary.scalar("reg_loss_gen", reg_loss_gen))
         summary_list_gen.extend(summary_scale_res)
         summary_list_gen.extend(summary_logits_gen)
-        self.summary_gen = tf.summary.merge(summary_list_gen)
+        self._summary_gen = tf.summary.merge(summary_list_gen)
 
         summary_list_dis = []
-        summary_list_dis.append(tf.summary.scalar("dis_loss_all", self.dis_loss_all))
-        summary_list_dis.append(tf.summary.scalar("adv_loss_dis_b", self.adv_loss_dis_b))
-        summary_list_dis.append(tf.summary.scalar("reg_loss_dis", self.reg_loss_dis))
+        summary_list_dis.append(tf.summary.scalar("dis_loss_all", self._dis_loss_all))
+        summary_list_dis.append(tf.summary.scalar("adv_loss_dis_b", adv_loss_dis_b))
+        summary_list_dis.append(tf.summary.scalar("reg_loss_dis", reg_loss_dis))
         summary_list_dis.extend(summary_logits_dis)
-        self.summary_dis = tf.summary.merge(summary_list_dis)
+        self._summary_dis = tf.summary.merge(summary_list_dis)
 
     def build_model_test(self):
-        self.test_domain_A = tf.placeholder(tf.float32, [1, self._img_size, self._img_size, 3],
+        self._test_domain_a = tf.placeholder(tf.float32, [1, self._img_size, self._img_size, 3],
                                             name='test_domain_A')
-        test_fake_B = self._gen.translate(self.test_domain_A, scope='gen_a2b')
-        self.test_fake_B = tf.identity(test_fake_B, 'test_fake_B')
+        test_fake_b = self._gen.translate(self._test_domain_a, scope='gen_a2b')
+        self._test_fake_b = tf.identity(test_fake_b, 'test_fake_B')
 
     def train(self):
         tf.global_variables_initializer().run()
         self._saver = tf.train.Saver()
-        self.writer = tf.summary.FileWriter(self._log_dir, self._sess.graph)
+        writer = tf.summary.FileWriter(self._log_dir, self._sess.graph)
 
         # restore check-point if it exits
-        could_load, checkpoint_counter = self.load(self._checkpoint_dir)
+        could_load, checkpoint_counter = self._load(self._checkpoint_dir)
         if could_load:
             start_step = checkpoint_counter // self._n_steps
             start_batch_id = checkpoint_counter - start_step * self._n_iters_per_step
@@ -228,53 +228,53 @@ class SPatchGAN:
                 self._init_lr * (self._n_steps - step) / (self._n_steps - self._decay_step)
             for idx in range(start_batch_id, self._n_iters_per_step):
                 train_feed_dict = {
-                    self.lr: lr
+                    self._lr: lr
                 }
 
                 # Update D
-                d_loss, summary_str, _ = self._sess.run([self.dis_loss_all, self.summary_dis, self.D_optim],
-                                                       feed_dict=train_feed_dict)
+                loss_dis, summary_str, _ = self._sess.run([self._dis_loss_all, self._summary_dis, self._optim_dis],
+                                                          feed_dict=train_feed_dict)
                 if (idx+1) % self._summary_freq == 0:
-                    self.writer.add_summary(summary_str, counter)
+                    writer.add_summary(summary_str, counter)
 
                 # Update G
-                batch_A_images, batch_B_images, fake_B, identity_B, ABA_lowres, g_loss, summary_str, _ = \
-                    self._sess.run([self.domain_A, self.domain_B,
-                                    self.x_ab, self.x_bb, self.aba_lowres,
-                                    self.gen_loss_all, self.summary_gen, self.G_optim],
+                batch_a_images, batch_b_images, fake_b, identity_b, aba_lowres, loss_gen, summary_str, _ = \
+                    self._sess.run([self._domain_a, self._domain_b,
+                                    self._x_ab, self._x_bb, self._aba_lowres,
+                                    self._gen_loss_all, self._summary_gen, self._optim_gen],
                                    feed_dict=train_feed_dict)
 
                 if (idx+1) % self._summary_freq == 0:
-                    self.writer.add_summary(summary_str, counter)
+                    writer.add_summary(summary_str, counter)
 
                 # display training status
                 counter += 1
                 print("Step: [%2d] [%5d/%5d] time: %4.4f D_loss: %.8f, G_loss: %.8f"
-                      % (step, idx, self._n_iters_per_step, time.time() - start_time, d_loss, g_loss))
+                      % (step, idx, self._n_iters_per_step, time.time() - start_time, loss_dis, loss_gen))
 
                 if (idx+1) % self._img_save_freq == 0:
-                    ABA_lowres_resize = batch_resize(ABA_lowres, self._img_size)
-                    merged = np.vstack([batch_A_images, fake_B, ABA_lowres_resize, batch_B_images, identity_B])
+                    aba_lowres_resize = batch_resize(aba_lowres, self._img_size)
+                    merged = np.vstack([batch_a_images, fake_b, aba_lowres_resize, batch_b_images, identity_b])
                     save_images(merged, [5, self._batch_size],
                                 os.path.join(self._sample_dir, 'sample_{:03d}_{:05d}.jpg'.format(step, idx + 1)))
 
                 if (idx+1) % self._ckpt_save_freq == 0:
-                    self.save(self._checkpoint_dir, counter)
+                    self._save(self._checkpoint_dir, counter)
 
             # After an epoch, start_batch_id is set to zero
             # non-zero value is only for the first epoch after loading pre-trained model
             start_batch_id = 0
 
             # save model for final step
-            self.save(self._checkpoint_dir, counter)
+            self._save(self._checkpoint_dir, counter)
 
     def test(self):
-        testA_dir = os.path.join(os.path.dirname(__file__), 'dataset', self._test_dataset_name, 'testA')
-        test_A_files = get_img_paths(testA_dir, self._dataset_struct)
+        tes_a_dir = os.path.join(os.path.dirname(__file__), 'dataset', self._test_dataset_name, 'testA')
+        test_a_files = get_img_paths(tes_a_dir, self._dataset_struct)
 
         if self._saver is None:
             self._saver = tf.train.Saver()
-        could_load, checkpoint_counter = self.load(self._checkpoint_dir)
+        could_load, checkpoint_counter = self._load(self._checkpoint_dir)
         if could_load :
             print(" [*] Load SUCCESS")
         else :
@@ -286,10 +286,10 @@ class SPatchGAN:
         os.makedirs(result_dir, exist_ok=True)
 
         st = time.time()
-        for sample_file in test_A_files:  # A -> B
+        for sample_file in test_a_files:  # A -> B
             print('Processing source image: ' + sample_file)
             input = load_test_data(sample_file, size=self._img_size)
-            fake_img = self._sess.run(self.test_fake_B, feed_dict={self.test_domain_A: input})
+            fake_img = self._sess.run(self._test_fake_b, feed_dict={self._test_domain_a: input})
 
             if self._dataset_struct == 'plain':
                 dst_dir = result_dir
@@ -305,12 +305,12 @@ class SPatchGAN:
             save_images(fake_img[[0],:], [1, 1], image_path)
 
         time_cost = time.time() - st
-        time_cost_per_img_ms = round(time_cost * 1000 / len(test_A_files))
+        time_cost_per_img_ms = round(time_cost * 1000 / len(test_a_files))
         print('Time cost per image: {} ms'.format(time_cost_per_img_ms))
 
     def freeze_graph(self):
         self._saver = tf.train.Saver()
-        could_load, checkpoint_counter = self.load(self._checkpoint_dir)
+        could_load, checkpoint_counter = self._load(self._checkpoint_dir)
 
         if could_load:
             print(" [*] Load SUCCESS")
@@ -332,11 +332,11 @@ class SPatchGAN:
         with open(output_file, 'wb') as f:
             f.write(frozen_graph_def.SerializeToString())
 
-    def save(self, checkpoint_dir, step):
+    def _save(self, checkpoint_dir, step):
         os.makedirs(checkpoint_dir, exist_ok=True)
         self._saver.save(self._sess, os.path.join(checkpoint_dir, self._model_name + '.model'), global_step=step)
 
-    def load(self, checkpoint_dir):
+    def _load(self, checkpoint_dir):
         print(" [*] Reading checkpoints...")
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
         if ckpt and ckpt.model_checkpoint_path:
