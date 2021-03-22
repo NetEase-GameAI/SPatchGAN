@@ -1,3 +1,5 @@
 .idea/
-outputs/
+dataset/
+output/
 bash/
+__pycache__/
