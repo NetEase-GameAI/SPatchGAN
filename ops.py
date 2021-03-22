@@ -166,3 +166,40 @@ def resblock_v1(x_init, channel, pad_type: str = 'zero', use_bias=True, is_res=T
 
         x_ret = x + x_init if is_res else x
         return x_ret
+
+
+def l1_loss(x, y):
+    loss = tf.reduce_mean(tf.abs(x - y))
+    return loss
+
+
+def regularization_loss(scope_name: str) :
+    collection_regularization = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+
+    loss = []
+    for item in collection_regularization :
+        if scope_name in item.name :
+            loss.append(item)
+
+    return tf.reduce_sum(loss)
+
+
+def adv_loss(x, loss_func : str, target : str):
+    loss_list = []
+    logits_list = x if isinstance(x, list) else [x]
+    for i, logits in enumerate(logits_list):
+        if loss_func == 'lsgan':
+            if target == 'real':
+                target_val = 1.0
+            elif target == 'fake':
+                target_val = 0.0
+            else:
+                raise ValueError('Invalid target {} for adv_loss'.format(target))
+            loss = tf.squared_difference(logits, target_val)
+        else:
+            raise ValueError('Invalid loss_func {} for adv_loss'.format(loss_func))
+        loss = tf.reduce_mean(loss) / len(logits_list)
+        loss_list.append(loss)
+
+    return sum(loss_list)
+

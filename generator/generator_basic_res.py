@@ -56,6 +56,7 @@ class GeneratorBasicRes:
             with tf.variable_scope('logits'):
                 # (256, 256, 128) -> (256, 256, 3)
                 x = conv(x, channels=3, kernel=3, pad=1, scope='G_logit')
+                x = tf.identity(x, 'pre_tanh')
                 x = tanh(x)
 
             return x

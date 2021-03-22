@@ -46,7 +46,6 @@ def parse_args():
 
     # Input configs
     parser.add_argument('--img_size', type=int, default=256, help='The size of input images.')
-    parser.add_argument('--img_ch', type=int, default=3, help='Number of channels of the input images.')
     parser.add_argument('--augment_flag', type=none_or_str, default='pad_crop',
                         help='Augmentation method: [pad_crop / resize_crop / None].')
 
@@ -120,18 +119,19 @@ def main():
         else:
             raise RuntimeError('Invalid network!')
 
-        gan.build_model()
-
-        # show network architecture
-        show_all_variables()
-
-        if args.phase == 'train' :
+        if args.phase == 'train':
+            gan.build_model_train()
+            show_all_variables()
             gan.train()
             print(" [*] Training finished!")
         elif args.phase == 'test':
+            gan.build_model_test()
+            show_all_variables()
             gan.test()
             print(" [*] Test finished!")
         elif args.phase == 'freeze_graph':
+            gan.build_model_freeze()
+            show_all_variables()
             gan.freeze_graph()
             print(" [*] Graph frozen!")
         else:
