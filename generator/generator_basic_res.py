@@ -12,7 +12,7 @@ class GeneratorBasicRes:
         self._block_type = block_type
         self._upsample_type = upsample_type
 
-    def translate(self, x, reuse=False, scope='gen_basic_res'):
+    def translate(self, x, reuse=False, scope='gen'):
         with tf.variable_scope(scope, reuse=reuse) :
             channel = self._ch
 

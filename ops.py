@@ -39,11 +39,34 @@ def conv(x, channels, kernel=1, stride=1, pad=0, pad_type: str = 'zero', use_bia
                 bias = tf.get_variable("bias", [channels], initializer=tf.constant_initializer(0.0))
                 x = tf.nn.bias_add(x, bias)
 
-        else :
+        else:
             x = tf.layers.conv2d(inputs=x, filters=channels,
                                  kernel_size=kernel, kernel_initializer=weight_init,
                                  kernel_regularizer=weight_regularizer,
                                  strides=stride, use_bias=use_bias)
+        return x
+
+
+def fully_connected(x, units, use_bias=True, sn: str = None, scope='linear'):
+    with tf.variable_scope(scope):
+        x = tf.layers.flatten(x)
+        shape = x.get_shape().as_list()
+        channels = shape[-1]
+
+        if sn is not None:
+            w = tf.get_variable("kernel", [channels, units], tf.float32,
+                                initializer=weight_init, regularizer=weight_regularizer)
+            if use_bias:
+                bias = tf.get_variable("bias", [units],
+                                       initializer=tf.constant_initializer(0.0))
+
+                x = tf.matmul(x, spectral_norm(w, method=sn)) + bias
+            else:
+                x = tf.matmul(x, spectral_norm(w, method=sn))
+
+        else:
+            x = tf.layers.dense(x, units=units, kernel_initializer=weight_init, kernel_regularizer=weight_regularizer, use_bias=use_bias)
+
         return x
 
 
@@ -106,6 +129,16 @@ def relu(x):
 
 def tanh(x):
     return tf.tanh(x)
+
+
+def global_avg_pooling(x):
+    gap = tf.reduce_mean(x, axis=[1, 2])
+    return gap
+
+
+def global_max_pooling(x):
+    gmp = tf.reduce_max(x, axis=[1, 2])
+    return gmp
 
 
 def nearest_up(x, scale_factor=2):

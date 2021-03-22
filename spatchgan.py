@@ -95,5 +95,5 @@ class SPatchGAN:
 
         print()
         print('##### Information #####')
-        print('# of trainA/B images: {}/{}'.format(len(self.trainA_dataset), len(self.trainB_dataset)) )
+        print('Number of trainA/B images: {}/{}'.format(len(self.trainA_dataset), len(self.trainB_dataset)) )
         print()
