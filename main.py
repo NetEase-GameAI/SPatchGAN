@@ -6,17 +6,18 @@ from spatchgan import SPatchGAN
 
 
 def str2bool(x):
-    return x.lower() in ('true')
+    return x.lower() == 'true'
 
 
 def none_or_str(x):
     if x == 'None':
         return None
-    return x
+    else:
+        return x
 
 
 def parse_args():
-    desc = "Tensorflow implementation of SPatchGAN."
+    desc = "TensorFlow implementation of SPatchGAN."
     parser = argparse.ArgumentParser(description=desc)
 
     # General configs
@@ -35,7 +36,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=4, help='Batch size.')
     parser.add_argument('--img_save_freq', type=int, default=1000, help='Image saving frequency in iteration.')
     parser.add_argument('--ckpt_save_freq', type=int, default=1000, help='Checkpoint saving frequency in iteration.')
-    parser.add_argument('--summary_freq', type=int, default=100, help='Tensorflow summary frequency.')
+    parser.add_argument('--summary_freq', type=int, default=100, help='TensorFlow summary frequency.')
     parser.add_argument('--decay_step', type=int, default=10, help='Starting point for learning rate decay.')
     parser.add_argument('--lr', type=float, default=0.0001, help='The learning rate.')
     parser.add_argument('--adv_weight', type=float, default=4.0, help='Adversarial loss weight.')
@@ -100,6 +101,8 @@ def parse_args():
 
 
 def check_args(args):
+    if args is None:
+        raise RuntimeError('Invalid arguments!')
     return args
 
 
@@ -107,10 +110,7 @@ def main():
     # parse arguments
     args = parse_args()
     os.makedirs(args.output_dir, exist_ok=True)
-    if args is None:
-        exit()
 
-    # open session
     gpu_options = tf.GPUOptions(allow_growth=True)
     with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)) as sess:
 
