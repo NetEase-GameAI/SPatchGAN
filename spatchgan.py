@@ -14,38 +14,37 @@ from generator.generator_basic_res import GeneratorBasicRes
 class SPatchGAN:
     def __init__(self, sess, args):
         # General
-        self.model_name = 'SPatchGAN'
-        self.sess = sess
-        self.saver = None
-        self.phase = args.phase
-        self.dataset_name = args.dataset
-        self.test_dataset_name = args.test_dataset or args.dataset
-        self.dataset_struct = args.dataset_struct
-        self.suffix = args.suffix
+        self._model_name = 'SPatchGAN'
+        self._sess = sess
+        self._saver = None
+        self._dataset_name = args.dataset
+        self._test_dataset_name = args.test_dataset or args.dataset
+        self._dataset_struct = args.dataset_struct
+        self._suffix = args.suffix
 
         # Training
-        self.n_steps = args.n_steps
-        self.n_iters_per_step = args.n_iters_per_step
-        self.batch_size = args.batch_size
-        self.img_save_freq = args.img_save_freq
-        self.ckpt_save_freq = args.ckpt_save_freq
-        self.summary_freq = args.summary_freq
-        self.decay_step = args.decay_step
-        self.init_lr = args.lr
-        self.adv_weight = args.adv_weight
-        self.reg_weight = args.reg_weight
-        self.cyc_weight = args.cyc_weight
-        self.id_weight = args.id_weight
-        self.gan_type = args.gan_type
+        self._n_steps = args.n_steps
+        self._n_iters_per_step = args.n_iters_per_step
+        self._batch_size = args.batch_size
+        self._img_save_freq = args.img_save_freq
+        self._ckpt_save_freq = args.ckpt_save_freq
+        self._summary_freq = args.summary_freq
+        self._decay_step = args.decay_step
+        self._init_lr = args.lr
+        self._adv_weight = args.adv_weight
+        self._reg_weight = args.reg_weight
+        self._cyc_weight = args.cyc_weight
+        self._id_weight = args.id_weight
+        self._gan_type = args.gan_type
 
         # Input
-        self.img_size = args.img_size
-        self.augment_type = args.augment_type
-        trainA_dir = os.path.join(os.path.dirname(__file__), 'dataset', self.dataset_name, 'trainA')
-        trainB_dir = os.path.join(os.path.dirname(__file__), 'dataset', self.dataset_name, 'trainB')
-        self.trainA_dataset = get_img_paths(trainA_dir, self.dataset_struct)
-        self.trainB_dataset = get_img_paths(trainB_dir, self.dataset_struct)
-        self.dataset_num = max(len(self.trainA_dataset), len(self.trainB_dataset))
+        self._img_size = args.img_size
+        self._augment_type = args.augment_type
+        trainA_dir = os.path.join(os.path.dirname(__file__), 'dataset', self._dataset_name, 'trainA')
+        trainB_dir = os.path.join(os.path.dirname(__file__), 'dataset', self._dataset_name, 'trainB')
+        self._trainA_dataset = get_img_paths(trainA_dir, self._dataset_struct)
+        self._trainB_dataset = get_img_paths(trainB_dir, self._dataset_struct)
+        self._dataset_num = max(len(self._trainA_dataset), len(self._trainB_dataset))
 
         # Discriminator
         if args.dis_type == 'spatch':
@@ -56,58 +55,57 @@ class SPatchGAN:
                 stats.append('max')
             if args.mean_dis:
                 stats.append('stddev')
-            self.dis = DiscriminatorSPatch(ch=args.ch_dis,
-                                           n_downsample_init=args.n_downsample_init_dis,
-                                           n_scales=args.n_scales_dis,
-                                           n_adapt=args.n_adapt_dis,
-                                           n_mix=args.n_mix_dis,
-                                           logits_type=args.logits_type_dis,
-                                           stats=stats,
-                                           sn=args.sn_dis)
+            self._dis = DiscriminatorSPatch(ch=args.ch_dis,
+                                            n_downsample_init=args.n_downsample_init_dis,
+                                            n_scales=args.n_scales_dis,
+                                            n_adapt=args.n_adapt_dis,
+                                            n_mix=args.n_mix_dis,
+                                            logits_type=args.logits_type_dis,
+                                            stats=stats,
+                                            sn=args.sn_dis)
         else:
             raise ValueError('Invalid dis_type!')
 
         # Generator
         if args.gen_type == 'basic_res':
-            self.gen = GeneratorBasicRes(ch=args.ch_gen,
-                                         n_updownsample=args.n_updownsample_gen,
-                                         n_res=args.n_res_gen,
-                                         n_enhanced_upsample=args.n_enhanced_upsample_gen,
-                                         n_mix_upsample=args.n_mix_upsample_gen,
-                                         block_type=args.block_type_gen,
-                                         upsample_type=args.upsample_type_gen)
-            self.gen_bw = GeneratorBasicRes(ch=args.ch_gen_bw,
-                                            n_updownsample=args.n_updownsample_gen_bw,
-                                            n_res=args.n_res_gen_bw,
-                                            n_enhanced_upsample=args.n_enhanced_upsample_gen,
-                                            n_mix_upsample=args.n_mix_upsample_gen,
-                                            block_type=args.block_type_gen,
-                                            upsample_type=args.upsample_type_gen)
+            self._gen = GeneratorBasicRes(ch=args.ch_gen,
+                                          n_updownsample=args.n_updownsample_gen,
+                                          n_res=args.n_res_gen,
+                                          n_enhanced_upsample=args.n_enhanced_upsample_gen,
+                                          n_mix_upsample=args.n_mix_upsample_gen,
+                                          block_type=args.block_type_gen,
+                                          upsample_type=args.upsample_type_gen)
+            self._gen_bw = GeneratorBasicRes(ch=args.ch_gen_bw,
+                                             n_updownsample=args.n_updownsample_gen_bw,
+                                             n_res=args.n_res_gen_bw,
+                                             n_enhanced_upsample=args.n_enhanced_upsample_gen,
+                                             n_mix_upsample=args.n_mix_upsample_gen,
+                                             block_type=args.block_type_gen,
+                                             upsample_type=args.upsample_type_gen)
         else:
             raise ValueError('Invalid gen_type!')
-        self.resolution_bw = self.img_size // args.resize_factor_gen_bw
+        self._resolution_bw = self._img_size // args.resize_factor_gen_bw
 
         # Directory
-        self.output_dir = args.output_dir
-        self.model_dir = "{}_{}_{}".format(self.model_name, self.dataset_name, self.suffix)
-        self.checkpoint_dir = os.path.join(self.output_dir, self.model_dir, args.checkpoint_dir)
-        self.sample_dir = os.path.join(self.output_dir, self.model_dir, args.sample_dir)
-        self.log_dir = os.path.join(self.output_dir, self.model_dir, args.log_dir)
-        self.result_dir = os.path.join(self.output_dir, self.model_dir, args.result_dir)
-        for dir in [self.checkpoint_dir, self.sample_dir, self.log_dir, self.result_dir]:
-            os.makedirs(dir, exist_ok=True)
+        model_dir = "{}_{}_{}".format(self._model_name, self._dataset_name, self._suffix)
+        self._checkpoint_dir = os.path.join(args.output_dir, model_dir, args.checkpoint_dir)
+        self._sample_dir = os.path.join(args.output_dir, model_dir, args.sample_dir)
+        self._log_dir = os.path.join(args.output_dir, model_dir, args.log_dir)
+        self._result_dir = os.path.join(args.output_dir, model_dir, args.result_dir)
+        for dir_ in [self._checkpoint_dir, self._sample_dir, self._log_dir, self._result_dir]:
+            os.makedirs(dir_, exist_ok=True)
 
         print()
         print('##### Information #####')
-        print('Number of trainA/B images: {}/{}'.format(len(self.trainA_dataset), len(self.trainB_dataset)) )
+        print('Number of trainA/B images: {}/{}'.format(len(self._trainA_dataset), len(self._trainB_dataset)) )
         print()
 
     def fetch_data(self, dataset):
         gpu_device = '/gpu:0'
-        Image_Data_Class = ImageData(self.img_size, self.augment_type)
+        Image_Data_Class = ImageData(self._img_size, self._augment_type)
         train_dataset = tf.data.Dataset.from_tensor_slices(dataset)
-        train_dataset = train_dataset.apply(shuffle_and_repeat(self.dataset_num)) \
-            .apply(map_and_batch(Image_Data_Class.image_processing, self.batch_size,
+        train_dataset = train_dataset.apply(shuffle_and_repeat(self._dataset_num)) \
+            .apply(map_and_batch(Image_Data_Class.image_processing, self._batch_size,
                                  num_parallel_batches=16, drop_remainder=True)) \
             .apply(prefetch_to_device(gpu_device, None))
         train_iterator = train_dataset.make_one_shot_iterator()
@@ -117,44 +115,44 @@ class SPatchGAN:
         self.lr = tf.placeholder(tf.float32, name='learning_rate')
 
         # Input images
-        self.domain_A = self.fetch_data(self.trainA_dataset)
-        self.domain_B = self.fetch_data(self.trainB_dataset)
+        self.domain_A = self.fetch_data(self._trainA_dataset)
+        self.domain_B = self.fetch_data(self._trainB_dataset)
 
         # Forward generation
-        self.x_ab = self.gen.translate(self.domain_A, scope='gen_a2b')
+        self.x_ab = self._gen.translate(self.domain_A, scope='gen_a2b')
 
         # Backward generation
-        if self.cyc_weight > 0.0:
-            self.a_lr = tf.image.resize_images(self.domain_A, [self.resolution_bw, self.resolution_bw])
-            self.ab_lr = tf.image.resize_images(self.x_ab, [self.resolution_bw, self.resolution_bw])
-            self.aba_lr = self.gen_bw.translate(self.ab_lr, scope='gen_b2a')
+        if self._cyc_weight > 0.0:
+            self.a_lowres = tf.image.resize_images(self.domain_A, [self._resolution_bw, self._resolution_bw])
+            self.ab_lowres = tf.image.resize_images(self.x_ab, [self._resolution_bw, self._resolution_bw])
+            self.aba_lowres = self._gen_bw.translate(self.ab_lowres, scope='gen_b2a')
         else:
-            self.aba_lr = tf.zeros([self.batch_size, self.resolution_bw, self.resolution_bw, 3])
+            self.aba_lowres = tf.zeros([self._batch_size, self._resolution_bw, self._resolution_bw, 3])
 
             # Identity mapping
-        self.x_bb = self.gen.translate(self.domain_B, reuse=True, scope='gen_a2b') \
-            if self.id_weight > 0.0 else tf.zeros_like(self.domain_B)
+        self.x_bb = self._gen.translate(self.domain_B, reuse=True, scope='gen_a2b') \
+            if self._id_weight > 0.0 else tf.zeros_like(self.domain_B)
 
         # Discriminator
-        b_logits = self.dis.discriminate(self.domain_B, scope='dis_b')
-        ab_logits = self.dis.discriminate(self.x_ab, reuse=True, scope='dis_b')
+        b_logits = self._dis.discriminate(self.domain_B, scope='dis_b')
+        ab_logits = self._dis.discriminate(self.x_ab, reuse=True, scope='dis_b')
 
         # Adversarial loss for G
-        self.adv_loss_gen_ab = self.adv_weight * adv_loss(ab_logits, self.gan_type, target='real')
+        self.adv_loss_gen_ab = self._adv_weight * adv_loss(ab_logits, self._gan_type, target='real')
 
         # Adversarial loss for D
-        self.adv_loss_dis_b = self.adv_weight * adv_loss(b_logits, self.gan_type, target='real')
-        self.adv_loss_dis_b += self.adv_weight * adv_loss(ab_logits, self.gan_type, target='fake')
+        self.adv_loss_dis_b = self._adv_weight * adv_loss(b_logits, self._gan_type, target='real')
+        self.adv_loss_dis_b += self._adv_weight * adv_loss(ab_logits, self._gan_type, target='fake')
 
         # Identity loss
-        self.id_loss_bb = self.id_weight * l1_loss(self.domain_B, self.x_bb) \
-            if self.id_weight > 0.0 else 0.0
-        self.cyc_loss_aba = self.cyc_weight * l1_loss(self.a_lr, self.aba_lr) \
-            if self.cyc_weight > 0.0 else 0.0
+        self.id_loss_bb = self._id_weight * l1_loss(self.domain_B, self.x_bb) \
+            if self._id_weight > 0.0 else 0.0
+        self.cyc_loss_aba = self._cyc_weight * l1_loss(self.a_lowres, self.aba_lowres) \
+            if self._cyc_weight > 0.0 else 0.0
 
         # Weight decay
-        self.reg_loss_gen = self.reg_weight * regularization_loss('gen_')
-        self.reg_loss_dis = self.reg_weight * regularization_loss('dis_')
+        self.reg_loss_gen = self._reg_weight * regularization_loss('gen_')
+        self.reg_loss_dis = self._reg_weight * regularization_loss('dis_')
 
         # Overall loss
         self.gen_loss_all = self.adv_loss_gen_ab \
@@ -200,21 +198,21 @@ class SPatchGAN:
         self.summary_dis = tf.summary.merge(summary_list_dis)
 
     def build_model_test(self):
-        self.test_domain_A = tf.placeholder(tf.float32, [1, self.img_size, self.img_size, 3],
+        self.test_domain_A = tf.placeholder(tf.float32, [1, self._img_size, self._img_size, 3],
                                             name='test_domain_A')
-        test_fake_B = self.gen.translate(self.test_domain_A, scope='gen_a2b')
+        test_fake_B = self._gen.translate(self.test_domain_A, scope='gen_a2b')
         self.test_fake_B = tf.identity(test_fake_B, 'test_fake_B')
 
     def train(self):
         tf.global_variables_initializer().run()
-        self.saver = tf.train.Saver()
-        self.writer = tf.summary.FileWriter(self.log_dir, self.sess.graph)
+        self._saver = tf.train.Saver()
+        self.writer = tf.summary.FileWriter(self._log_dir, self._sess.graph)
 
         # restore check-point if it exits
-        could_load, checkpoint_counter = self.load(self.checkpoint_dir)
+        could_load, checkpoint_counter = self.load(self._checkpoint_dir)
         if could_load:
-            start_step = checkpoint_counter // self.n_steps
-            start_batch_id = checkpoint_counter - start_step * self.n_iters_per_step
+            start_step = checkpoint_counter // self._n_steps
+            start_batch_id = checkpoint_counter - start_step * self._n_iters_per_step
             counter = checkpoint_counter
             print(" [*] Load SUCCESS")
         else:
@@ -225,77 +223,77 @@ class SPatchGAN:
 
         # Looping over steps
         start_time = time.time()
-        for step in range(start_step, self.n_steps):
-            lr = self.init_lr if step < self.decay_step else \
-                self.init_lr * (self.n_steps - step) / (self.n_steps - self.decay_step)
-            for idx in range(start_batch_id, self.n_iters_per_step):
+        for step in range(start_step, self._n_steps):
+            lr = self._init_lr if step < self._decay_step else \
+                self._init_lr * (self._n_steps - step) / (self._n_steps - self._decay_step)
+            for idx in range(start_batch_id, self._n_iters_per_step):
                 train_feed_dict = {
                     self.lr: lr
                 }
 
                 # Update D
-                d_loss, summary_str, _ = self.sess.run([self.dis_loss_all, self.summary_dis, self.D_optim],
+                d_loss, summary_str, _ = self._sess.run([self.dis_loss_all, self.summary_dis, self.D_optim],
                                                        feed_dict=train_feed_dict)
-                if (idx+1) % self.summary_freq == 0:
+                if (idx+1) % self._summary_freq == 0:
                     self.writer.add_summary(summary_str, counter)
 
                 # Update G
-                batch_A_images, batch_B_images, fake_B, identity_B, ABA_lr, g_loss, summary_str, _ = \
-                    self.sess.run([self.domain_A, self.domain_B,
-                                   self.x_ab, self.x_bb, self.aba_lr,
-                                   self.gen_loss_all, self.summary_gen, self.G_optim],
-                                  feed_dict=train_feed_dict)
+                batch_A_images, batch_B_images, fake_B, identity_B, ABA_lowres, g_loss, summary_str, _ = \
+                    self._sess.run([self.domain_A, self.domain_B,
+                                    self.x_ab, self.x_bb, self.aba_lowres,
+                                    self.gen_loss_all, self.summary_gen, self.G_optim],
+                                   feed_dict=train_feed_dict)
 
-                if (idx+1) % self.summary_freq == 0:
+                if (idx+1) % self._summary_freq == 0:
                     self.writer.add_summary(summary_str, counter)
 
                 # display training status
                 counter += 1
                 print("Step: [%2d] [%5d/%5d] time: %4.4f D_loss: %.8f, G_loss: %.8f"
-                      % (step, idx, self.n_iters_per_step, time.time() - start_time, d_loss, g_loss))
+                      % (step, idx, self._n_iters_per_step, time.time() - start_time, d_loss, g_loss))
 
-                if (idx+1) % self.img_save_freq == 0:
-                    ABA_lr_resize = batch_resize(ABA_lr, self.img_size)
-                    merged = np.vstack([batch_A_images, fake_B, ABA_lr_resize, batch_B_images, identity_B])
-                    save_images(merged, [5, self.batch_size],
-                                os.path.join(self.sample_dir, 'sample_{:03d}_{:05d}.jpg'.format(step, idx + 1)))
+                if (idx+1) % self._img_save_freq == 0:
+                    ABA_lowres_resize = batch_resize(ABA_lowres, self._img_size)
+                    merged = np.vstack([batch_A_images, fake_B, ABA_lowres_resize, batch_B_images, identity_B])
+                    save_images(merged, [5, self._batch_size],
+                                os.path.join(self._sample_dir, 'sample_{:03d}_{:05d}.jpg'.format(step, idx + 1)))
 
-                if (idx+1) % self.ckpt_save_freq == 0:
-                    self.save(self.checkpoint_dir, counter)
+                if (idx+1) % self._ckpt_save_freq == 0:
+                    self.save(self._checkpoint_dir, counter)
 
             # After an epoch, start_batch_id is set to zero
             # non-zero value is only for the first epoch after loading pre-trained model
             start_batch_id = 0
 
             # save model for final step
-            self.save(self.checkpoint_dir, counter)
+            self.save(self._checkpoint_dir, counter)
 
     def test(self):
-        testA_dir = os.path.join(os.path.dirname(__file__), 'dataset', self.test_dataset_name, 'testA')
-        test_A_files = get_img_paths(testA_dir, self.dataset_struct)
+        testA_dir = os.path.join(os.path.dirname(__file__), 'dataset', self._test_dataset_name, 'testA')
+        test_A_files = get_img_paths(testA_dir, self._dataset_struct)
 
-        if self.saver is None:
-            self.saver = tf.train.Saver()
-        could_load, checkpoint_counter = self.load(self.checkpoint_dir)
+        if self._saver is None:
+            self._saver = tf.train.Saver()
+        could_load, checkpoint_counter = self.load(self._checkpoint_dir)
         if could_load :
             print(" [*] Load SUCCESS")
         else :
             print(" [!] Load failed...")
             raise RuntimeError("Failed to load the checkpoint")
 
-        dataset_tag = '' if self.test_dataset_name == self.dataset_name else self.test_dataset_name + '_'
-        result_dir = os.path.join(self.result_dir, dataset_tag + str(checkpoint_counter))
+        dataset_tag = '' if self._test_dataset_name == self._dataset_name else self._test_dataset_name + '_'
+        result_dir = os.path.join(self._result_dir, dataset_tag + str(checkpoint_counter))
         os.makedirs(result_dir, exist_ok=True)
 
         st = time.time()
         for sample_file in test_A_files:  # A -> B
             print('Processing source image: ' + sample_file)
-            input = load_test_data(sample_file, size=self.img_size)
-            fake_img = self.sess.run(self.test_fake_B, feed_dict={self.test_domain_A: input})
+            input = load_test_data(sample_file, size=self._img_size)
+            fake_img = self._sess.run(self.test_fake_B, feed_dict={self.test_domain_A: input})
 
-            if self.dataset_struct == 'plain':
+            if self._dataset_struct == 'plain':
                 dst_dir = result_dir
-            elif self.dataset_struct == 'tree':
+            elif self._dataset_struct == 'tree':
                 src_dir = os.path.dirname(sample_file)
                 dirname_level1 = os.path.basename(src_dir)
                 dirname_level2 = os.path.basename(os.path.dirname(src_dir))
@@ -311,8 +309,8 @@ class SPatchGAN:
         print('Time cost per image: {} ms'.format(time_cost_per_img_ms))
 
     def freeze_graph(self):
-        self.saver = tf.train.Saver()
-        could_load, checkpoint_counter = self.load(self.checkpoint_dir)
+        self._saver = tf.train.Saver()
+        could_load, checkpoint_counter = self.load(self._checkpoint_dir)
 
         if could_load:
             print(" [*] Load SUCCESS")
@@ -320,14 +318,14 @@ class SPatchGAN:
             print(" [!] Load failed...")
             raise RuntimeError("Failed to load the checkpoint")
 
-        output_dir = os.path.join(self.checkpoint_dir, 'pb')
+        output_dir = os.path.join(self._checkpoint_dir, 'pb')
         os.makedirs(output_dir, exist_ok=True)
         time_stamp = datetime.now().strftime('%Y%m%d-%H%M%S')
         output_file = os.path.join(output_dir, 'output_graph_' + time_stamp + '.pb')
 
         frozen_graph_def = tf.graph_util.convert_variables_to_constants(
-            sess=self.sess,
-            input_graph_def=self.sess.graph_def,
+            sess=self._sess,
+            input_graph_def=self._sess.graph_def,
             output_node_names=['test_fake_B'])
 
         # Save the frozen graph
@@ -336,14 +334,14 @@ class SPatchGAN:
 
     def save(self, checkpoint_dir, step):
         os.makedirs(checkpoint_dir, exist_ok=True)
-        self.saver.save(self.sess, os.path.join(checkpoint_dir, self.model_name + '.model'), global_step=step)
+        self._saver.save(self._sess, os.path.join(checkpoint_dir, self._model_name + '.model'), global_step=step)
 
     def load(self, checkpoint_dir):
         print(" [*] Reading checkpoints...")
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
         if ckpt and ckpt.model_checkpoint_path:
             ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
-            self.saver.restore(self.sess, os.path.join(checkpoint_dir, ckpt_name))
+            self._saver.restore(self._sess, os.path.join(checkpoint_dir, ckpt_name))
             counter = int(ckpt_name.split('-')[-1])
             print(" [*] Success to read {}".format(ckpt_name))
             return True, counter
