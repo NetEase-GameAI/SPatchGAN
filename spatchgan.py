@@ -8,6 +8,7 @@ from utils import get_img_paths, summary_by_keywords, batch_resize, save_images,
 from ops import l1_loss, adv_loss, regularization_loss
 from imagedata import ImageData
 from discriminator.discriminator_spatch import DiscriminatorSPatch
+from discriminator.discriminator_patch import DiscriminatorPatch
 from generator.generator_basic_res import GeneratorBasicRes
 
 
@@ -86,6 +87,12 @@ class SPatchGAN:
                                        logits_type=args.logits_type_dis,
                                        stats=stats,
                                        sn=args.sn_dis)
+        elif args.dis_type == 'patch':
+            return DiscriminatorPatch(ch=args.ch_dis,
+                                      n_downsample_init=args.n_downsample_init_dis,
+                                      n_scales=args.n_scales_dis,
+                                      sn=args.sn_dis)
+
         else:
             raise ValueError('Invalid dis_type!')
 

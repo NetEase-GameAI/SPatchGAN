@@ -12,7 +12,7 @@ class DiscriminatorSPatch:
         self._n_mix = n_mix
         self._logits_type = logits_type
         self._stats = stats
-        self.sn = sn
+        self._sn = sn
 
     def discriminate(self, x, reuse=False, scope='dis'):
         with tf.variable_scope(scope, reuse=reuse):
@@ -22,14 +22,14 @@ class DiscriminatorSPatch:
             for i in range(self._n_downsample_init):
                 with tf.variable_scope('down_{}'.format(i)):
                     # (256, 256, 3) -> (128, 128, 256) -> (64, 64, 512)
-                    x = conv(x, channel, kernel=4, stride=2, pad=1, sn=self.sn)
+                    x = conv(x, channel, kernel=4, stride=2, pad=1, sn=self._sn)
                     x = lrelu(x)
                     channel *= 2
 
             for i in range(self._n_scales):
                 with tf.variable_scope('scale_{}'.format(i)):
                     # (64, 64, 512) -> (32, 32, 1024) -> (16, 16, 1024) -> (8, 8, 1024) -> (4, 4, 1024)
-                    x = conv(x, channel, kernel=4, stride=2, pad=1, sn=self.sn, scope='conv_k4')
+                    x = conv(x, channel, kernel=4, stride=2, pad=1, sn=self._sn, scope='conv_k4')
                     x = lrelu(x)
                     logits = self._dis_logits(x)
                     logits_list.extend(logits)
@@ -49,7 +49,7 @@ class DiscriminatorSPatch:
 
             for i in range(self._n_adapt):
                 with tf.variable_scope('premix_{}'.format(i)):
-                    x = conv(x, channel, sn=self.sn)
+                    x = conv(x, channel, sn=self._sn)
                     x = lrelu(x)
 
             if 'mean' in self._stats:
@@ -83,13 +83,13 @@ class DiscriminatorSPatch:
             channel = n_ch or shape[-1]
             if len(shape) == 2:
                 for i in range(self._n_mix):
-                    x = fully_connected(x, units=channel, sn=self.sn, scope='mix_'+str(i))
+                    x = fully_connected(x, units=channel, sn=self._sn, scope='mix_'+str(i))
                     x = lrelu(x)
-                x = fully_connected(x, units=1, sn=self.sn, scope='logits')
+                x = fully_connected(x, units=1, sn=self._sn, scope='logits')
             elif len(shape) == 4:
                 for i in range(self._n_mix):
-                    x = conv(x, channels=channel, kernel=1, stride=1, sn=self.sn, scope='mix_'+str(i))
+                    x = conv(x, channels=channel, kernel=1, stride=1, sn=self._sn, scope='mix_'+str(i))
                     x = lrelu(x)
-                x = conv(x, channels=1, kernel=1, stride=1, sn=self.sn, scope='logits')
+                x = conv(x, channels=1, kernel=1, stride=1, sn=self._sn, scope='logits')
             return x
 
