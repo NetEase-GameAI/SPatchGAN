@@ -66,21 +66,21 @@ def batch_resize(x, img_size):
 
 
 def save_images(images, size, image_path):
-    return imsave(inverse_transform(images), size, image_path)
+    return _imsave(_inverse_transform(images), size, image_path)
 
 
-def inverse_transform(images):
+def _inverse_transform(images):
     return ((images+1.) / 2) * 255.0
 
 
-def imsave(images, size, path):
-    images = merge(images, size)
+def _imsave(images, size, path):
+    images = _merge(images, size)
     images = cv2.cvtColor(images.astype('uint8'), cv2.COLOR_RGB2BGR)
 
     return cv2.imwrite(path, images)
 
 
-def merge(images, size):
+def _merge(images, size):
     h, w = images.shape[1], images.shape[2]
     img = np.zeros((h * size[0], w * size[1], 3))
     for idx, image in enumerate(images):
