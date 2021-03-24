@@ -2,7 +2,7 @@ import os
 import tensorflow as tf
 from configs import parse_args
 from utils import show_all_variables
-from spatchgan import SPatchGAN
+from gan.spatchgan import SPatchGAN
 
 
 def main():
@@ -14,7 +14,7 @@ def main():
     with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)) as sess:
 
         if args.network == 'spatchgan':
-            gan = SPatchGAN(sess, args)
+            gan = SPatchGAN('SPatchGAN', sess, args)
         else:
             raise RuntimeError('Invalid network!')
 
