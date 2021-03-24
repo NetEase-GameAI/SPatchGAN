@@ -10,7 +10,7 @@
 - Dataset structure (dataset_struct='plain')
 ```
 - dataset
-    - selfie2anime
+    - <dataset_name>
         - trainA
             - 1.jpg
             - 2.jpg
