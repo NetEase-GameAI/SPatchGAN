@@ -47,43 +47,11 @@ class SPatchGAN:
         self._dataset_num = max(len(self._trainA_dataset), len(self._trainB_dataset))
 
         # Discriminator
-        if args.dis_type == 'spatch':
-            stats = []
-            if args.mean_dis:
-                stats.append('mean')
-            if args.max_dis:
-                stats.append('max')
-            if args.mean_dis:
-                stats.append('stddev')
-            self._dis = DiscriminatorSPatch(ch=args.ch_dis,
-                                            n_downsample_init=args.n_downsample_init_dis,
-                                            n_scales=args.n_scales_dis,
-                                            n_adapt=args.n_adapt_dis,
-                                            n_mix=args.n_mix_dis,
-                                            logits_type=args.logits_type_dis,
-                                            stats=stats,
-                                            sn=args.sn_dis)
-        else:
-            raise ValueError('Invalid dis_type!')
+        self._dis = self._create_dis(args)
 
         # Generator
-        if args.gen_type == 'basic_res':
-            self._gen = GeneratorBasicRes(ch=args.ch_gen,
-                                          n_updownsample=args.n_updownsample_gen,
-                                          n_res=args.n_res_gen,
-                                          n_enhanced_upsample=args.n_enhanced_upsample_gen,
-                                          n_mix_upsample=args.n_mix_upsample_gen,
-                                          block_type=args.block_type_gen,
-                                          upsample_type=args.upsample_type_gen)
-            self._gen_bw = GeneratorBasicRes(ch=args.ch_gen_bw,
-                                             n_updownsample=args.n_updownsample_gen_bw,
-                                             n_res=args.n_res_gen_bw,
-                                             n_enhanced_upsample=args.n_enhanced_upsample_gen,
-                                             n_mix_upsample=args.n_mix_upsample_gen,
-                                             block_type=args.block_type_gen,
-                                             upsample_type=args.upsample_type_gen)
-        else:
-            raise ValueError('Invalid gen_type!')
+        self._gen = self._create_gen(args)
+        self._gen_bw = self._create_gen_bw(args)
         self._resolution_bw = self._img_size // args.resize_factor_gen_bw
 
         # Directory
@@ -99,6 +67,53 @@ class SPatchGAN:
         print('##### Information #####')
         print('Number of trainA/B images: {}/{}'.format(len(self._trainA_dataset), len(self._trainB_dataset)) )
         print()
+
+    @staticmethod
+    def _create_dis(args):
+        if args.dis_type == 'spatch':
+            stats = []
+            if args.mean_dis:
+                stats.append('mean')
+            if args.max_dis:
+                stats.append('max')
+            if args.mean_dis:
+                stats.append('stddev')
+            return DiscriminatorSPatch(ch=args.ch_dis,
+                                       n_downsample_init=args.n_downsample_init_dis,
+                                       n_scales=args.n_scales_dis,
+                                       n_adapt=args.n_adapt_dis,
+                                       n_mix=args.n_mix_dis,
+                                       logits_type=args.logits_type_dis,
+                                       stats=stats,
+                                       sn=args.sn_dis)
+        else:
+            raise ValueError('Invalid dis_type!')
+
+    @staticmethod
+    def _create_gen(args):
+        if args.gen_type == 'basic_res':
+            return GeneratorBasicRes(ch=args.ch_gen,
+                                     n_updownsample=args.n_updownsample_gen,
+                                     n_res=args.n_res_gen,
+                                     n_enhanced_upsample=args.n_enhanced_upsample_gen,
+                                     n_mix_upsample=args.n_mix_upsample_gen,
+                                     block_type=args.block_type_gen,
+                                     upsample_type=args.upsample_type_gen)
+        else:
+            raise ValueError('Invalid gen_type!')
+
+    @staticmethod
+    def _create_gen_bw(args):
+        if args.gen_type == 'basic_res':
+            return GeneratorBasicRes(ch=args.ch_gen_bw,
+                                     n_updownsample=args.n_updownsample_gen_bw,
+                                     n_res=args.n_res_gen_bw,
+                                     n_enhanced_upsample=args.n_enhanced_upsample_gen,
+                                     n_mix_upsample=args.n_mix_upsample_gen,
+                                     block_type=args.block_type_gen,
+                                     upsample_type=args.upsample_type_gen)
+        else:
+            raise ValueError('Invalid gen_type!')
 
     def _fetch_data(self, dataset):
         gpu_device = '/gpu:0'

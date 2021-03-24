@@ -61,16 +61,16 @@ class GeneratorBasicRes:
 
             return x
 
-    @classmethod
-    def _conv_block(cls, x, block_type, channel, scope='resblock_0'):
+    @staticmethod
+    def _conv_block(x, block_type, channel, scope='resblock_0'):
         if block_type == 'v1':
             x = resblock_v1(x, channel=channel, scope=scope)
         else:
             raise ValueError('Wrong block_type!')
         return x
 
-    @classmethod
-    def _upsample(cls, x, method: str = 'nearest'):
+    @staticmethod
+    def _upsample(x, method: str = 'nearest'):
         if method == 'nearest':
             x = nearest_up(x)
         elif method == 'bilinear':
