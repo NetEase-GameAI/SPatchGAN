@@ -208,17 +208,17 @@ class SPatchGAN:
         self._saver = tf.train.Saver()
         writer = tf.summary.FileWriter(self._log_dir, self._sess.graph)
 
-        # restore check-point if it exits
+        # restore the checkpoint if it exits
         could_load, checkpoint_counter = self._load(self._checkpoint_dir)
         if could_load:
-            start_step = checkpoint_counter // self._n_steps
-            start_batch_id = checkpoint_counter - start_step * self._n_iters_per_step
-            counter = checkpoint_counter
+            counter = checkpoint_counter + 1
+            start_step = counter // self._n_iters_per_step
+            start_batch_id = counter - start_step * self._n_iters_per_step
             print(" [*] Load SUCCESS")
         else:
+            counter = 0
             start_step = 0
             start_batch_id = 0
-            counter = 1
             print(" [!] Load failed...")
 
         # Looping over steps
@@ -226,47 +226,47 @@ class SPatchGAN:
         for step in range(start_step, self._n_steps):
             lr = self._init_lr if step < self._decay_step else \
                 self._init_lr * (self._n_steps - step) / (self._n_steps - self._decay_step)
-            for idx in range(start_batch_id, self._n_iters_per_step):
+            for batch_id in range(start_batch_id, self._n_iters_per_step):
                 train_feed_dict = {
                     self._lr: lr
                 }
 
                 # Update D
-                loss_dis, summary_str, _ = self._sess.run([self._dis_loss_all, self._summary_dis, self._optim_dis],
-                                                          feed_dict=train_feed_dict)
-                if (idx+1) % self._summary_freq == 0:
-                    writer.add_summary(summary_str, counter)
+                loss_dis, summary_str_dis, _ = self._sess.run([self._dis_loss_all, self._summary_dis, self._optim_dis],
+                                                              feed_dict=train_feed_dict)
 
                 # Update G
-                batch_a_images, batch_b_images, fake_b, identity_b, aba_lowres, loss_gen, summary_str, _ = \
+                batch_a_images, batch_b_images, fake_b, identity_b, aba_lowres, loss_gen, summary_str_gen, _ = \
                     self._sess.run([self._domain_a, self._domain_b,
                                     self._x_ab, self._x_bb, self._aba_lowres,
                                     self._gen_loss_all, self._summary_gen, self._optim_gen],
                                    feed_dict=train_feed_dict)
 
-                if (idx+1) % self._summary_freq == 0:
-                    writer.add_summary(summary_str, counter)
-
                 # display training status
-                counter += 1
                 print("Step: [%2d] [%5d/%5d] time: %4.4f D_loss: %.8f, G_loss: %.8f"
-                      % (step, idx, self._n_iters_per_step, time.time() - start_time, loss_dis, loss_gen))
+                      % (step, batch_id, self._n_iters_per_step, time.time() - start_time, loss_dis, loss_gen))
 
-                if (idx+1) % self._img_save_freq == 0:
+                if (counter+1) % self._summary_freq == 0:
+                    writer.add_summary(summary_str_dis, counter)
+                    writer.add_summary(summary_str_gen, counter)
+
+                if (counter+1) % self._img_save_freq == 0:
                     aba_lowres_resize = batch_resize(aba_lowres, self._img_size)
                     merged = np.vstack([batch_a_images, fake_b, aba_lowres_resize, batch_b_images, identity_b])
                     save_images(merged, [5, self._batch_size],
-                                os.path.join(self._sample_dir, 'sample_{:03d}_{:05d}.jpg'.format(step, idx + 1)))
+                                os.path.join(self._sample_dir, 'sample_{:03d}_{:05d}.jpg'.format(step, batch_id)))
 
-                if (idx+1) % self._ckpt_save_freq == 0:
+                if (counter+1) % self._ckpt_save_freq == 0:
                     self._save(self._checkpoint_dir, counter)
 
-            # After an epoch, start_batch_id is set to zero
-            # non-zero value is only for the first epoch after loading pre-trained model
+                counter += 1
+
+            # After each step, start_batch_id is set to zero.
+            # Non-zero value is only for the first step after loading a pre-trained model.
             start_batch_id = 0
 
-            # save model for final step
-            self._save(self._checkpoint_dir, counter)
+            # Save the final model.
+            self._save(self._checkpoint_dir, counter-1)
 
     def test(self):
         tes_a_dir = os.path.join(os.path.dirname(__file__), 'dataset', self._test_dataset_name, 'testA')
