@@ -67,5 +67,8 @@ python main.py --dataset glasses-male --cyc_weight 30 --suffix 20210317
 python main.py --dataset <dataset_name> --phase test --suffix 20210317
 ```
 
+### More configs
+- Check [configs.py](configs.py)
+
 ### Acknowledgement
 - Our code is partially based on [U-GAT-IT](https://github.com/taki0112/UGATIT).
