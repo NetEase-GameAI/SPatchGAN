@@ -6,7 +6,6 @@ from gan.spatchgan import SPatchGAN
 
 
 def main():
-    # parse arguments
     args = parse_args()
     os.makedirs(args.output_dir, exist_ok=True)
 

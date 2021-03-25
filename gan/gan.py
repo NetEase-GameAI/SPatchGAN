@@ -5,6 +5,7 @@ import time
 from utils import get_img_paths, save_images, load_test_data
 
 
+# Base class for GANs
 class GAN:
     def __init__(self, model_name, sess, args):
         # General
@@ -16,19 +17,8 @@ class GAN:
         self._dataset_struct = args.dataset_struct
         self._suffix = args.suffix
 
-        # Input
-        self._img_size = args.img_size
-        self._augment_type = args.augment_type
-        trainA_dir = os.path.join(os.path.dirname(__file__), '..', 'dataset', self._dataset_name, 'trainA')
-        trainB_dir = os.path.join(os.path.dirname(__file__), '..', 'dataset', self._dataset_name, 'trainB')
-        self._trainA_dataset = get_img_paths(trainA_dir, self._dataset_struct)
-        self._trainB_dataset = get_img_paths(trainB_dir, self._dataset_struct)
-        self._dataset_num = max(len(self._trainA_dataset), len(self._trainB_dataset))
-
-        # Generator
-        self._gen = None
-
-        # Directory
+        # Directories
+        self._dataset_dir = args.dataset_dir
         model_dir = "{}_{}_{}".format(self._model_name, self._dataset_name, self._suffix)
         self._checkpoint_dir = os.path.join(args.output_dir, model_dir, args.checkpoint_dir)
         self._sample_dir = os.path.join(args.output_dir, model_dir, args.sample_dir)
@@ -37,9 +27,20 @@ class GAN:
         for dir_ in [self._checkpoint_dir, self._sample_dir, self._log_dir, self._result_dir]:
             os.makedirs(dir_, exist_ok=True)
 
+        # Input
+        self._img_size = args.img_size
+        train_a_dir = os.path.join(self._dataset_dir, self._dataset_name, 'trainA')
+        train_b_dir = os.path.join(self._dataset_dir, self._dataset_name, 'trainB')
+        self._train_a_dataset = get_img_paths(train_a_dir, self._dataset_struct)
+        self._train_b_dataset = get_img_paths(train_b_dir, self._dataset_struct)
+        self._dataset_num = max(len(self._train_a_dataset), len(self._train_b_dataset))
+
+        # Generator
+        self._gen = None
+
         print()
         print('##### Information #####')
-        print('Number of trainA/B images: {}/{}'.format(len(self._trainA_dataset), len(self._trainB_dataset)) )
+        print('Number of trainA/B images: {}/{}'.format(len(self._train_a_dataset), len(self._train_b_dataset)) )
         print()
 
     def build_model_train(self):
@@ -55,13 +56,13 @@ class GAN:
         pass
 
     def test(self):
-        tes_a_dir = os.path.join(os.path.dirname(__file__), '..', 'dataset', self._test_dataset_name, 'testA')
+        tes_a_dir = os.path.join(self._dataset_dir, self._test_dataset_name, 'testA')
         test_a_files = get_img_paths(tes_a_dir, self._dataset_struct)
 
         if self._saver is None:
             self._saver = tf.train.Saver()
         could_load, checkpoint_counter = self._load_ckpt(self._checkpoint_dir)
-        if could_load :
+        if could_load:
             print(" [*] Load SUCCESS")
         else :
             print(" [!] Load failed...")
@@ -74,8 +75,8 @@ class GAN:
         st = time.time()
         for sample_file in test_a_files:  # A -> B
             print('Processing source image: ' + sample_file)
-            input = load_test_data(sample_file, size=self._img_size)
-            fake_img = self._sess.run(self._test_fake_b, feed_dict={self._test_domain_a: input})
+            src = load_test_data(sample_file, size=self._img_size)
+            fake_img = self._sess.run(self._test_fake_b, feed_dict={self._test_domain_a: src})
 
             if self._dataset_struct == 'plain':
                 dst_dir = result_dir

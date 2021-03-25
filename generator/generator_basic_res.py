@@ -16,7 +16,7 @@ class GeneratorBasicRes:
         with tf.variable_scope(scope, reuse=reuse) :
             channel = self._ch
 
-            # Down-Sampling
+            # Downsampling
             for i in range(self._n_updownsample):
                 with tf.variable_scope('down_{}'.format(i)):
                     # (256, 256, 3) -> (128, 128, 128) -> (64, 64, 256) -> (32, 32, 512)

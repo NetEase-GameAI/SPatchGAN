@@ -82,17 +82,20 @@ def parse_args():
                         help='The resizing factor of input images for backward G.')
 
     # Directory names
+    parser.add_argument('--dataset_dir', type=str,
+                        default=os.path.join(os.path.dirname(__file__), 'dataset'),
+                        help='Directory for all datasets')
     parser.add_argument('--output_dir', type=str,
                         default=os.path.join(os.path.dirname(__file__), 'output'),
-                        help='Directory name to save all output')
+                        help='Directory for all outputs')
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoint',
-                        help='Directory to save the checkpoints')
+                        help='Directory for the checkpoints')
     parser.add_argument('--result_dir', type=str, default='gen',
-                        help='Directory to save the generated images.')
+                        help='Directory for the generated images.')
     parser.add_argument('--log_dir', type=str, default='logs',
-                        help='Directory to save training logs.')
+                        help='Directory for the training logs.')
     parser.add_argument('--sample_dir', type=str, default='samples',
-                        help='Directory to save the samples on training.')
+                        help='Directory for the training sample images.')
 
     return _check_args(parser.parse_args())
 

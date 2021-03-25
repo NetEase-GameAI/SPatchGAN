@@ -31,6 +31,9 @@ class SPatchGAN(GAN):
         self._id_weight = args.id_weight
         self._gan_type = args.gan_type
 
+        # Input
+        self._augment_type = args.augment_type
+
         # Discriminator
         self._dis = self._create_dis(args)
 
@@ -107,8 +110,8 @@ class SPatchGAN(GAN):
         self._lr = tf.placeholder(tf.float32, name='learning_rate')
 
         # Input images
-        self._domain_a = self._fetch_data(self._trainA_dataset)
-        self._domain_b = self._fetch_data(self._trainB_dataset)
+        self._domain_a = self._fetch_data(self._train_a_dataset)
+        self._domain_b = self._fetch_data(self._train_b_dataset)
 
         # Forward generation
         self._x_ab = self._gen.translate(self._domain_a, scope='gen_a2b')
@@ -121,7 +124,7 @@ class SPatchGAN(GAN):
         else:
             self._aba_lowres = tf.zeros([self._batch_size, self._resolution_bw, self._resolution_bw, 3])
 
-            # Identity mapping
+        # Identity mapping
         self._x_bb = self._gen.translate(self._domain_b, reuse=True, scope='gen_a2b') \
             if self._id_weight > 0.0 else tf.zeros_like(self._domain_b)
 
@@ -251,5 +254,5 @@ class SPatchGAN(GAN):
             # Non-zero value is only for the first step after loading a pre-trained model.
             start_batch_id = 0
 
-            # Save the final model.
-            self._save_ckpt(self._checkpoint_dir, counter-1)
+        # Save the final model.
+        self._save_ckpt(self._checkpoint_dir, counter-1)

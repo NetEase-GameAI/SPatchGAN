@@ -2,6 +2,7 @@ import tensorflow as tf
 from ops import conv, lrelu, global_avg_pooling, global_max_pooling, fully_connected
 
 
+# SPatchGAN discriminator
 class DiscriminatorSPatch:
     def __init__(self, ch, n_downsample_init, n_scales, n_adapt, n_mix,
                  logits_type: str, stats: list, sn):
