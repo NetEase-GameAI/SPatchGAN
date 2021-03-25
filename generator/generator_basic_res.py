@@ -3,6 +3,7 @@ from ops import conv, instance_norm, layer_norm, relu, tanh, resblock_v1, neares
 
 
 class GeneratorBasicRes:
+    """Basic residual block based generator for SPatchGAN."""
     def __init__(self, ch, n_updownsample, n_res, n_enhanced_upsample, n_mix_upsample, block_type, upsample_type):
         self._ch = ch
         self._n_updownsample = n_updownsample
@@ -13,6 +14,7 @@ class GeneratorBasicRes:
         self._upsample_type = upsample_type
 
     def translate(self, x, reuse=False, scope='gen'):
+        """Build the generator graph."""
         with tf.variable_scope(scope, reuse=reuse) :
             channel = self._ch
 

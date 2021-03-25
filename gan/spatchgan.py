@@ -13,6 +13,7 @@ from generator.generator_basic_res import GeneratorBasicRes
 
 
 class SPatchGAN(GAN):
+    """SPatchGAN framework."""
     def __init__(self, model_name, sess, args):
         super().__init__(model_name, sess, args)
 
@@ -107,6 +108,7 @@ class SPatchGAN(GAN):
         return train_iterator.get_next()
 
     def build_model_train(self):
+        """Build the graph for training."""
         self._lr = tf.placeholder(tf.float32, name='learning_rate')
 
         # Input images
@@ -193,6 +195,7 @@ class SPatchGAN(GAN):
         self._summary_dis = tf.summary.merge(summary_list_dis)
 
     def train(self):
+        """Run training iterations."""
         tf.global_variables_initializer().run()
         self._saver = tf.train.Saver()
         writer = tf.summary.FileWriter(self._log_dir, self._sess.graph)

@@ -2,8 +2,8 @@ import tensorflow as tf
 from ops import conv, lrelu, global_avg_pooling, global_max_pooling, fully_connected
 
 
-# SPatchGAN discriminator
 class DiscriminatorSPatch:
+    """SPatchGAN discriminator."""
     def __init__(self, ch, n_downsample_init, n_scales, n_adapt, n_mix,
                  logits_type: str, stats: list, sn):
         self._ch = ch
@@ -16,6 +16,7 @@ class DiscriminatorSPatch:
         self._sn = sn
 
     def discriminate(self, x, reuse=False, scope='dis'):
+        """Calculate the statistical feature based logits."""
         with tf.variable_scope(scope, reuse=reuse):
             channel = self._ch
             logits_list = []

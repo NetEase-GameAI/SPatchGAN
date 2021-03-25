@@ -5,8 +5,8 @@ import time
 from utils import get_img_paths, save_images, load_test_data
 
 
-# Base class for GANs
 class GAN:
+    """Base class for GANs."""
     def __init__(self, model_name, sess, args):
         # General
         self._model_name = model_name
@@ -44,18 +44,22 @@ class GAN:
         print()
 
     def build_model_train(self):
+        """To be implemented by the subclass."""
         pass
 
     def build_model_test(self):
+        """Build the graph for testing."""
         self._test_domain_a = tf.placeholder(tf.float32, [1, self._img_size, self._img_size, 3],
                                              name='test_domain_A')
         test_fake_b = self._gen.translate(self._test_domain_a, scope='gen_a2b')
         self._test_fake_b = tf.identity(test_fake_b, 'test_fake_B')
 
     def train(self):
+        """To be implemented by the subclass."""
         pass
 
     def test(self):
+        """Translate test images."""
         tes_a_dir = os.path.join(self._dataset_dir, self._test_dataset_name, 'testA')
         test_a_files = get_img_paths(tes_a_dir, self._dataset_struct)
 
@@ -96,6 +100,7 @@ class GAN:
         print('Time cost per image: {} ms'.format(time_cost_per_img_ms))
 
     def freeze_graph(self):
+        """Generate the .pb model."""
         self._saver = tf.train.Saver()
         could_load, checkpoint_counter = self._load_ckpt(self._checkpoint_dir)
 

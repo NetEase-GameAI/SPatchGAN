@@ -2,8 +2,8 @@ import tensorflow as tf
 from ops import conv, lrelu
 
 
-# Multiscale patchgan discriminator for MUNIT / Council-GAN / ACL-GAN
 class DiscriminatorPatch:
+    """Multiscale PatchGan discriminator for MUNIT / Council-GAN / ACL-GAN."""
     def __init__(self, ch, n_downsample_init, n_scales, sn):
         self._ch = ch  # 64 in MUNIT
         self._n_downsample_init = n_downsample_init  # 4 in MUNIT
@@ -11,6 +11,7 @@ class DiscriminatorPatch:
         self._sn = sn
 
     def discriminate(self, x, reuse=False, scope='dis'):
+        """Calculate the patch based logits."""
         with tf.variable_scope(scope, reuse=reuse):
             logits = []
             for i in range(self._n_scales):

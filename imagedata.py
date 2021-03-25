@@ -2,6 +2,7 @@ import tensorflow as tf
 
 
 class ImageData:
+    """Input image processing and augmentation."""
     def __init__(self, load_size, augment_type):
         self._load_size = load_size
         self._augment_type = augment_type

@@ -6,11 +6,13 @@ from tensorflow.contrib import slim
 
 
 def show_all_variables():
+    """Show all variables in the graph."""
     model_vars = tf.trainable_variables()
     slim.model_analyzer.analyze_vars(model_vars, print_info=True)
 
 
 def get_img_paths(input_dir: str, dataset_struct : str = 'plain'):
+    """Get all images in an input directory."""
     exts = ['jpg', 'jpeg', 'png']
     imgs = []
     for ext in exts:
@@ -25,7 +27,7 @@ def get_img_paths(input_dir: str, dataset_struct : str = 'plain'):
 
 
 def get_img_paths_auto(input_dir: str):
-    # Auto detect the directory structure.
+    """Auto detect the directory structure and get all images."""
     dataset = get_img_paths(input_dir)
     if len(dataset) == 0:
         dataset = get_img_paths(input_dir, dataset_struct='tree')
@@ -33,6 +35,7 @@ def get_img_paths_auto(input_dir: str):
 
 
 def summary_by_keywords(keywords, node_type='tensor'):
+    """Generate summary for the tf nodes whose names match the keywords."""
     summary_list = []
     if node_type == 'tensor':
         all_nodes = [tensor for op in tf.get_default_graph().get_operations() for tensor in op.values()]
@@ -59,6 +62,7 @@ def summary_by_keywords(keywords, node_type='tensor'):
 
 
 def batch_resize(x, img_size):
+    """Resize the NHWC Numpy images."""
     x_up = np.zeros((x.shape[0], img_size, img_size, 3))
     for i in range(x.shape[0]):
         x_up[i, :, :, :] = cv2.resize(x[i, :, :, :], dsize=(img_size, img_size))
@@ -66,6 +70,7 @@ def batch_resize(x, img_size):
 
 
 def save_images(images, size, image_path):
+    """Save a grid of images."""
     return _imsave(_inverse_transform(images), size, image_path)
 
 
@@ -92,6 +97,7 @@ def _merge(images, size):
 
 
 def load_test_data(image_path, size=256):
+    """Load test images with OpenCV."""
     img = cv2.imread(image_path, flags=cv2.IMREAD_COLOR)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = cv2.resize(img, dsize=(size, size))

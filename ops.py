@@ -7,6 +7,7 @@ weight_regularizer = tf_contrib.layers.l2_regularizer(scale=0.0001)
 
 def conv(x, channels, kernel=1, stride=1, pad=0, pad_type: str = 'zero', use_bias=True,
          sn: str = None, scope: str = 'conv_0'):
+    """Convolution layer."""
     with tf.variable_scope(scope):
         if pad > 0 :
             if (kernel - stride) % 2 == 0:
@@ -48,6 +49,7 @@ def conv(x, channels, kernel=1, stride=1, pad=0, pad_type: str = 'zero', use_bia
 
 
 def fully_connected(x, units, use_bias=True, sn: str = None, scope='linear'):
+    """Fully connected layer."""
     with tf.variable_scope(scope):
         x = tf.layers.flatten(x)
         shape = x.get_shape().as_list()
@@ -71,19 +73,22 @@ def fully_connected(x, units, use_bias=True, sn: str = None, scope='linear'):
 
 
 def instance_norm(x, scope='instance_norm'):
+    """Instance normalization layer."""
     return tf_contrib.layers.instance_norm(x,
                                            epsilon=1e-05,
                                            center=True, scale=True,
                                            scope=scope)
 
 
-def layer_norm(x, scope='layer_norm') :
+def layer_norm(x, scope='layer_norm'):
+    """Layer normalization layer."""
     return tf_contrib.layers.layer_norm(x,
                                         center=True, scale=True,
                                         scope=scope)
 
 
 def spectral_norm(w, n_iters=1, method: str = 'fast'):
+    """Spectral normalization layer."""
     w_shape = w.shape.as_list()
     w = tf.reshape(w, [-1, w_shape[-1]])
 
@@ -120,40 +125,48 @@ def spectral_norm(w, n_iters=1, method: str = 'fast'):
 
 
 def lrelu(x, alpha=0.2):
+    """Leaky ReLU."""
     return tf.nn.leaky_relu(x, alpha)
 
 
 def relu(x):
+    """ReLU."""
     return tf.nn.relu(x)
 
 
 def tanh(x):
+    """Tanh."""
     return tf.tanh(x)
 
 
 def global_avg_pooling(x):
+    """Global average pooling for the NHWC data."""
     gap = tf.reduce_mean(x, axis=[1, 2])
     return gap
 
 
 def global_max_pooling(x):
+    """Global max pooling for the NHWC data."""
     gmp = tf.reduce_max(x, axis=[1, 2])
     return gmp
 
 
 def nearest_up(x, scale_factor=2):
+    """Nearest neighbor upsampling."""
     _, h, w, _ = x.get_shape().as_list()
     new_size = [h * scale_factor, w * scale_factor]
     return tf.image.resize_nearest_neighbor(x, size=new_size)
 
 
 def bilinear_up(x, scale_factor=2):
+    """Bilinear upsampling."""
     _, h, w, _ = x.get_shape().as_list()
     new_size = [h * scale_factor, w * scale_factor]
     return tf.image.resize_images(x, size=new_size)
 
 
 def resblock_v1(x_init, channel, pad_type: str = 'zero', use_bias=True, is_res=True, scope='resblock_0'):
+    """Residual block."""
     with tf.variable_scope(scope):
         with tf.variable_scope('res1'):
             x = conv(x_init, channel, kernel=3, pad=1, pad_type=pad_type, use_bias=use_bias)
@@ -169,11 +182,13 @@ def resblock_v1(x_init, channel, pad_type: str = 'zero', use_bias=True, is_res=T
 
 
 def l1_loss(x, y):
+    """Calculate the L1 loss."""
     loss = tf.reduce_mean(tf.abs(x - y))
     return loss
 
 
-def regularization_loss(scope_name: str) :
+def regularization_loss(scope_name: str):
+    """Collect the regularization loss."""
     collection_regularization = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
 
     loss = []
@@ -185,6 +200,7 @@ def regularization_loss(scope_name: str) :
 
 
 def adv_loss(x, loss_func : str, target : str):
+    """Calculate the adversarial loss."""
     loss_list = []
     logits_list = x if isinstance(x, list) else [x]
     for i, logits in enumerate(logits_list):
@@ -202,4 +218,3 @@ def adv_loss(x, loss_func : str, target : str):
         loss_list.append(loss)
 
     return sum(loss_list)
-

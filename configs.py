@@ -14,6 +14,7 @@ def _none_or_str(x):
 
 
 def parse_args():
+    """Configurations."""
     desc = "TensorFlow implementation of SPatchGAN."
     parser = argparse.ArgumentParser(description=desc)
 
