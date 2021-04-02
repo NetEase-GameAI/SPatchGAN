@@ -11,7 +11,7 @@ def show_all_variables():
     slim.model_analyzer.analyze_vars(model_vars, print_info=True)
 
 
-def get_img_paths(input_dir: str, dataset_struct : str = 'plain'):
+def get_img_paths(input_dir: str, dataset_struct: str = 'plain'):
     """Get all images in an input directory."""
     exts = ['jpg', 'jpeg', 'png']
     imgs = []
