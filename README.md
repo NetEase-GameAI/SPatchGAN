@@ -1,5 +1,9 @@
 ## SPatchGAN: Official TensorFlow Implementation
 
+### Paper
+- "SPatchGAN: A Statistical Feature Based Discriminator for Unsupervised Image-to-Image Translation"  (ICCV 2021)
+    - [arxiv](https://arxiv.org/abs/2103.16219)
+
 ### Environment
 - CUDA 10.0
 - Python 3.6
@@ -40,31 +44,45 @@
     - subdir2
         - ...
 ```
-- The selfie-to-anime dataset can be downloaded from [U-GAT-IT](https://github.com/taki0112/UGATIT).
-- The male-to-female and glasses removal datasets can be downloaded from [Council-GAN](https://github.com/Onr/Council-GAN).
+
+- Selfie-to-anime:
+     - The dataset can be downloaded from [U-GAT-IT](https://github.com/taki0112/UGATIT).
+
+- Male-to-female and glasses removal:
+     - The datasets can be downloaded from [Council-GAN](https://github.com/Onr/Council-GAN).
+     - The images must be center cropped from 218x178 to 178x178 before training or testing.
+     - For glasses removal, only the male images are used in the experiments in our paper.
 
 ### Training
 
 - Set the suffix to anything descriptive, e.g., the date.
 - Selfie-to-Anime
 ```bash
-python main.py --dataset selfie2anime --augment_type resize_crop --suffix 20210317
+python main.py --dataset selfie2anime --augment_type resize_crop --suffix 20210317 --phase train
 ```
 
 - Male-to-Female
 ```bash
-python main.py --dataset male2female --cyc_weight 10 --suffix 20210317
+python main.py --dataset male2female --cyc_weight 10 --suffix 20210317 --phase train
 ```
 
 - Glasses Removal
 ```bash
-python main.py --dataset glasses-male --cyc_weight 30 --suffix 20210317
+python main.py --dataset glasses-male --cyc_weight 30 --suffix 20210317 --phase train
 ```
+- Find the output in ``./output/SPatchGAN_<dataset_name>_<suffix>``
 
-### Testing
+### Testing with the latest checkpoint
+- Replace ``--phase train`` with ``--phase test``
 
+### Save a frozen model (.pb)
+- Replace ``--phase train`` with ``--phase freeze_graph``
+- Find the saved frozen model in ``./output/SPatchGAN_<dataset_name>_<suffix>/checkpoint/pb``
+
+### Testing with the frozon model
 ```bash
-python main.py --dataset <dataset_name> --phase test --suffix 20210317
+cd frozen_model
+python test_frozen_model.py --image <input_image_or_dir> --output_dir <output_dir> --model <frozen_model_path>
 ```
 
 ### More configs
