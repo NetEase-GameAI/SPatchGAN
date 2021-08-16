@@ -4,9 +4,12 @@
 - "SPatchGAN: A Statistical Feature Based Discriminator for Unsupervised Image-to-Image Translation"  (ICCV 2021)
     - [arxiv](https://arxiv.org/abs/2103.16219)
 
-![s2a_cmp](images/s2a_cmp_github_downsized.jpg)
+<img src='./images/s2a_cmp_github_downsized.jpg' align="center" width=1060>
 
-![s2a_cmp](images/SPatchGAN_D_20210317_2x.jpg)
+<br><br>
+
+<img src='./images/SPatchGAN_D_20210317_2x.jpg' align="center" width=816>
+
 
 ### Environment
 - CUDA 10.0
@@ -75,6 +78,7 @@ python main.py --dataset male2female --cyc_weight 10 --suffix 20210317 --phase t
 python main.py --dataset glasses-male --cyc_weight 30 --suffix 20210317 --phase train
 ```
 - Find the output in ``./output/SPatchGAN_<dataset_name>_<suffix>``
+- The same command can be used to continue training based on the latest checkpoint.
 
 ### Testing with the latest checkpoint
 - Replace ``--phase train`` with ``--phase test``
@@ -89,9 +93,9 @@ cd frozen_model
 python test_frozen_model.py --image <input_image_or_dir> --output_dir <output_dir> --model <frozen_model_path>
 ```
 
-### More configs
-- Check [configs.py](configs.py)
-
+### Hyperparameters
+- Check [configs.py](configs.py) for the hyperparameters.
+- Check [tips](docs/tips.md) for more information about the hyperparameter tuning.
 
 ### Citation
 ```
