@@ -92,5 +92,16 @@ python test_frozen_model.py --image <input_image_or_dir> --output_dir <output_di
 ### More configs
 - Check [configs.py](configs.py)
 
+
+### Citation
+```
+@inproceedings{SPatchGAN2021,
+  title={SPatchGAN: A Statistical Feature Based Discriminator for Unsupervised Image-to-Image Translation},
+  author={Xuning Shao and Weidong Zhang},
+  booktitle={IEEE International Conference on Computer Vision (ICCV)},
+  year={2021}
+}
+```
+
 ### Acknowledgement
 - Our code is partially based on [U-GAT-IT](https://github.com/taki0112/UGATIT).
