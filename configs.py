@@ -40,7 +40,7 @@ def parse_args():
     parser.add_argument('--adv_weight', type=float, default=4.0, help='Adversarial loss weight.')
     parser.add_argument('--reg_weight', type=float, default=1.0, help='Regularization weight.')
     parser.add_argument('--cyc_weight', type=float, default=20.0, help='Weak cycle loss weight.')
-    parser.add_argument('--id_weight', type=int, default=10, help='Identity loss weight.')
+    parser.add_argument('--id_weight', type=float, default=10.0, help='Identity loss weight.')
     parser.add_argument('--gan_type', type=str, default='lsgan', help='GAN loss type: [lsgan].')
 
     # Input configs
