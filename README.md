@@ -6,7 +6,7 @@
 
 ![s2a_cmp](images/s2a_cmp_github_downsized.jpg)
 
-![s2a_cmp](images/SPatchGAN_D_20210317.jpg)
+![s2a_cmp](images/SPatchGAN_D_20210317_2x.jpg)
 
 ### Environment
 - CUDA 10.0
