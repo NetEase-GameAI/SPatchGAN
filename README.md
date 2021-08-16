@@ -4,6 +4,10 @@
 - "SPatchGAN: A Statistical Feature Based Discriminator for Unsupervised Image-to-Image Translation"  (ICCV 2021)
     - [arxiv](https://arxiv.org/abs/2103.16219)
 
+![s2a_cmp](images/s2a_cmp_github_downsized.jpg)
+
+![s2a_cmp](images/SPatchGAN_D_20210317.jpg)
+
 ### Environment
 - CUDA 10.0
 - Python 3.6
