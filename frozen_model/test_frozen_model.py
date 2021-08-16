@@ -3,8 +3,9 @@ import sys
 import cv2
 import argparse
 import time
-from utils import get_img_paths
+
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from utils import get_img_paths
 from frozen_model.image_translator import ImageTranslator
 
 cv2.setNumThreads(1)
