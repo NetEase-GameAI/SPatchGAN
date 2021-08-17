@@ -97,6 +97,9 @@ python test_frozen_model.py --image <input_image_or_dir> --output_dir <output_di
 - Check [configs.py](configs.py) for the hyperparameters.
 - Check [tips](docs/tips.md) for more information about the hyperparameter tuning.
 
+### Other Implementations
+- We provide a PyTorch implementation of the SPatchGAN discriminator in [spatchgan_discriminator_pytorch.py](https://gist.github.com/NetEase-GameAI/6b93a3fa4c8ab7a59a75eeacca33712f).
+
 ### Citation
 ```
 @inproceedings{SPatchGAN2021,
