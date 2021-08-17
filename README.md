@@ -8,7 +8,7 @@
 
 <br><br>
 
-<img src='./images/SPatchGAN_D_20210317_2x.jpg' align="center" width=408>
+<img src='./images/SPatchGAN_D_20210317_3x.jpg' align="center" width=612>
 
 
 ### Environment
