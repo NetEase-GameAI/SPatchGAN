@@ -58,7 +58,7 @@
 - Male-to-female and glasses removal:
      - The datasets can be downloaded from [Council-GAN](https://github.com/Onr/Council-GAN).
      - The images must be center cropped from 218x178 to 178x178 before training or testing.
-     - For glasses removal, only the male images are used in the experiments in our paper.
+     - For glasses removal, only the male images are used in the experiments in our paper. Note that the dataset from Council-GAN has already been split into two subdirectories, "1" for male and "2" for female.
 
 ### Training
 
