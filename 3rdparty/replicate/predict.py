@@ -1,3 +1,5 @@
+import sys
+sys.path.append('../..')
 import tempfile
 from pathlib import Path
 import argparse
