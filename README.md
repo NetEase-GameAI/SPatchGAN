@@ -3,7 +3,9 @@
 ### Paper
 "SPatchGAN: A Statistical Feature Based Discriminator for Unsupervised Image-to-Image Translation"  (ICCV 2021)
 
-[<img src='https://img.shields.io/badge/arXiv-2103.16219-blue'>](https://arxiv.org/abs/2103.16219) [<img src='https://img.shields.io/badge/video-5min-red'>](https://www.youtube.com/watch?v=JY7eq6q5qpk)
+[<img src='https://img.shields.io/badge/arXiv-2103.16219-blue'>](https://arxiv.org/abs/2103.16219)
+[<img src='https://img.shields.io/badge/video-5min-red'>](https://www.youtube.com/watch?v=JY7eq6q5qpk)
+[<img src='https://img.shields.io/badge/poster-ICCV-black'>](https://drive.google.com/file/d/1r62hIUkQrQGE_6PI_ovS4sdfHPjfSfIK/view?usp=sharing)
 
 <img src='./images/s2a_cmp_github_downsized.jpg' align="center" width=1060>
 
