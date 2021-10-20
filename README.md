@@ -4,6 +4,8 @@
 - "SPatchGAN: A Statistical Feature Based Discriminator for Unsupervised Image-to-Image Translation"  (ICCV 2021)
     - [arxiv](https://arxiv.org/abs/2103.16219)
 
+<a href="https://replicate.ai/netease-gameai/spatchgan-selfie2anime"><img src="https://img.shields.io/static/v1?label=Replicate&message=Demo and Docker Image&color=blue"></a>
+
 <img src='./images/s2a_cmp_github_downsized.jpg' align="center" width=1060>
 
 <br><br>
