@@ -1,16 +1,18 @@
 ## SPatchGAN: Official TensorFlow Implementation
 
 ### Paper
-- "SPatchGAN: A Statistical Feature Based Discriminator for Unsupervised Image-to-Image Translation"  (ICCV 2021)
-    - [arxiv](https://arxiv.org/abs/2103.16219)
+"SPatchGAN: A Statistical Feature Based Discriminator for Unsupervised Image-to-Image Translation"  (ICCV 2021)
 
-<a href="https://replicate.ai/netease-gameai/spatchgan-selfie2anime"><img src="https://img.shields.io/static/v1?label=Replicate&message=Demo and Docker Image&color=blue"></a>
+[<img src='https://img.shields.io/badge/arXiv-2103.16219-blue'>](https://arxiv.org/abs/2103.16219) [<img src='https://img.shields.io/badge/video-5min-red'>](https://www.youtube.com/watch?v=JY7eq6q5qpk)
 
 <img src='./images/s2a_cmp_github_downsized.jpg' align="center" width=1060>
 
 <br><br>
 
 <img src='./images/SPatchGAN_D_20210317_3x.jpg' align="center" width=612>
+
+### Web Demos
+<a href="https://replicate.ai/netease-gameai/spatchgan-selfie2anime"><img src="https://img.shields.io/static/v1?label=Replicate&message=Demo and Docker Image&color=blue"></a> by [CJWBW](https://github.com/CJWBW)
 
 
 ### Environment
@@ -109,11 +111,13 @@ python test_frozen_model.py --image <input_image_or_dir> --output_dir <output_di
 
 ### Citation
 ```
-@inproceedings{SPatchGAN2021,
-  title={SPatchGAN: A Statistical Feature Based Discriminator for Unsupervised Image-to-Image Translation},
-  author={Xuning Shao and Weidong Zhang},
-  booktitle={IEEE International Conference on Computer Vision (ICCV)},
-  year={2021}
+@InProceedings{Shao_2021_ICCV,
+    author    = {Shao, Xuning and Zhang, Weidong},
+    title     = {SPatchGAN: A Statistical Feature Based Discriminator for Unsupervised Image-to-Image Translation},
+    booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+    month     = {October},
+    year      = {2021},
+    pages     = {6546-6555}
 }
 ```
 
